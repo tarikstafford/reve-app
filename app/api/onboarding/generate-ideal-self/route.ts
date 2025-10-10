@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+const getOpenAI = () => new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build'
 })
 
 export async function POST(request: NextRequest) {
   try {
+    const openai = getOpenAI()
     const { name, age, qualityLoved, qualityDesired, idol, selfie } = await request.json()
 
     // Generate narrative using GPT-4
