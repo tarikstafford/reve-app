@@ -67,7 +67,7 @@ Respond in JSON format:
       style: 'natural'
     })
 
-    const imageUrl = imageResponse.data[0]?.url || ''
+    const imageUrl = imageResponse.data?.[0]?.url || ''
 
     // Save dream to database
     const { data: dream, error: dreamError } = await supabase
