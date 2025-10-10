@@ -50,7 +50,7 @@ Write in second person ("You are..."). Be poetic, dreamlike, and encouraging. Fo
       style: 'natural'
     })
 
-    const imageUrl = imageResponse.data[0].url
+    const imageUrl = imageResponse.data?.[0]?.url || ''
 
     return NextResponse.json({
       success: true,

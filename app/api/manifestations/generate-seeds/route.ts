@@ -52,7 +52,7 @@ Write in second person ("You are..."). Make it dreamlike, empowering, and suitab
         style: 'natural'
       })
 
-      const imageUrl = imageResponse.data[0].url
+      const imageUrl = imageResponse.data?.[0]?.url || ''
 
       // Generate audio using ElevenLabs (placeholder for now)
       // In production, you would call ElevenLabs API here
