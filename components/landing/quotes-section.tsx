@@ -99,7 +99,7 @@ export function QuotesSection() {
                     <Quote className="w-10 h-10 text-purple-300 group-hover:text-pink-300 transition-colors" />
                   </motion.div>
                   <p className="text-lg text-white/90 leading-relaxed italic">
-                    "{quote.text}"
+                    &ldquo;{quote.text}&rdquo;
                   </p>
                   <div className="pt-4 border-t border-white/20">
                     <p className="font-medium text-white group-hover:text-purple-200 transition-colors">{quote.author}</p>
@@ -123,8 +123,8 @@ export function QuotesSection() {
           <div className="bg-white/10 backdrop-blur rounded-2xl p-8 md:p-12 max-w-4xl mx-auto border border-white/20">
             <Quote className="w-12 h-12 text-purple-300 mx-auto mb-6" />
             <p className="text-2xl md:text-3xl font-light text-white leading-relaxed italic mb-6">
-              "We also live in our dreams, we do not live only by day. Sometimes we accomplish our
-              greatest deeds in dreams."
+              &ldquo;We also live in our dreams, we do not live only by day. Sometimes we accomplish our
+              greatest deeds in dreams.&rdquo;
             </p>
             <p className="text-purple-200">— Carl Jung</p>
           </div>

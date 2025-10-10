@@ -34,7 +34,7 @@ export function NameStep({ onNext, data, updateData }: NameStepProps) {
           What is your name?
         </h2>
         <p className="text-gray-500 text-lg">
-          Let's begin with something simple
+          Let&apos;s begin with something simple
         </p>
       </div>
 

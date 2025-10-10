@@ -62,7 +62,7 @@ export function ScienceSection() {
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Every feature in Rêve is grounded in published research from leading universities and
-            medical institutions. This isn't just an app—it's a science-backed tool for transformation.
+            medical institutions. This isn&apos;t just an app—it&apos;s a science-backed tool for transformation.
           </p>
         </motion.div>
 
@@ -98,7 +98,7 @@ export function ScienceSection() {
                   </div>
 
                   <p className="text-gray-700 leading-relaxed italic border-l-4 border-purple-300 group-hover:border-purple-500 pl-4 transition-colors">
-                    "{study.finding}"
+                    &ldquo;{study.finding}&rdquo;
                   </p>
 
                   <div className="space-y-2 pt-4 border-t border-purple-100">

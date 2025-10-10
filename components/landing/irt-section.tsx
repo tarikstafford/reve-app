@@ -124,7 +124,7 @@ export function IRTSection() {
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Activity className="w-6 h-6 text-purple-600" />
-                  <h4 className="font-medium text-gray-900">Effect Sizes (Cohen's d)</h4>
+                  <h4 className="font-medium text-gray-900">Effect Sizes (Cohen&apos;s d)</h4>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">

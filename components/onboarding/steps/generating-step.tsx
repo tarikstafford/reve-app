@@ -79,7 +79,7 @@ export function GeneratingStep({ onNext, data, updateData }: GeneratingStepProps
           Creating your ideal self...
         </h2>
         <p className="text-gray-500 text-lg">
-          We're weaving together your aspirations
+          We&apos;re weaving together your aspirations
         </p>
       </div>
 

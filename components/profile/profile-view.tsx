@@ -137,7 +137,7 @@ export function ProfileView() {
             )}
             {profile.quality_desired && (
               <div>
-                <p className="text-sm text-gray-500 mb-1">Quality you're developing</p>
+                <p className="text-sm text-gray-500 mb-1">Quality you&apos;re developing</p>
                 <p className="text-gray-800">{profile.quality_desired}</p>
               </div>
             )}

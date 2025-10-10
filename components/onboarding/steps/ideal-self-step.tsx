@@ -57,7 +57,7 @@ export function IdealSelfStep({ data }: IdealSelfStepProps) {
           transition={{ delay: 0.3 }}
           className="text-gray-600 text-lg"
         >
-          Meet the person you're becoming, {data.name}
+          Meet the person you&apos;re becoming, {data.name}
         </motion.p>
       </div>
 

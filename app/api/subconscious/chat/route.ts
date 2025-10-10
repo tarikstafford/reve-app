@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get or create conversation
-    let { data: conversations } = await supabase
+    const { data: conversations } = await supabase
       .from('conversations')
       .select('*')
       .eq('user_id', user.id)
