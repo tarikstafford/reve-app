@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Sparkles, ArrowRight, LogIn } from 'lucide-react'
 import Link from 'next/link'
+import { signInWithGoogle } from '@/lib/auth/auth-helpers'
 
 export function LandingHero() {
   return (
@@ -116,16 +117,15 @@ export function LandingHero() {
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
-          <Link href="/dashboard">
-            <Button
-              size="lg"
-              variant="outline"
-              className="px-8 py-6 text-lg rounded-full border-2 border-purple-300 hover:bg-purple-50 group"
-            >
-              <LogIn className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-              Sign In
-            </Button>
-          </Link>
+          <Button
+            size="lg"
+            variant="outline"
+            className="px-8 py-6 text-lg rounded-full border-2 border-purple-300 hover:bg-purple-50 group"
+            onClick={signInWithGoogle}
+          >
+            <LogIn className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+            Sign In
+          </Button>
         </motion.div>
 
         <motion.div
