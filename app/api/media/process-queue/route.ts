@@ -109,7 +109,7 @@ async function processQueue() {
       // Step 5: Update entity with media URLs
       console.log('Updating entity with media URLs...')
       const tableName = task.entity_type === 'dream' ? 'dreams' : 'manifestations'
-      await supabase
+      const { error: updateError } = await supabase
         .from(tableName)
         .update({
           image_url: imageUrl,
@@ -118,8 +118,15 @@ async function processQueue() {
         })
         .eq('id', task.entity_id)
 
+      if (updateError) {
+        console.error(`Failed to update ${tableName} with media URLs:`, updateError)
+        throw new Error(`Failed to update ${tableName}: ${updateError.message}`)
+      }
+
+      console.log(`Successfully updated ${tableName} ${task.entity_id} with media URLs`)
+
       // Step 6: Mark task as completed
-      await supabase
+      const { error: queueUpdateError } = await supabase
         .from('media_generation_queue')
         .update({
           status: 'completed',
@@ -129,6 +136,11 @@ async function processQueue() {
           updated_at: new Date().toISOString()
         })
         .eq('id', task.id)
+
+      if (queueUpdateError) {
+        console.error('Failed to update queue task:', queueUpdateError)
+        // Don't throw - entity was updated successfully, queue update is less critical
+      }
 
       console.log(`Successfully processed media for ${task.entity_type} ${task.entity_id}`)
 
