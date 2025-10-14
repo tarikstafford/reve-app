@@ -30,14 +30,19 @@ export function QualityLovedStep({ onNext, onBack, data, updateData }: QualityLo
       animate={{ opacity: 1 }}
       className="text-center space-y-12 p-8"
     >
-      <div className="space-y-4">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="space-y-4"
+      >
         <h2 className="text-4xl font-light text-gray-800">
           What is one quality you love about yourself?
         </h2>
-        <p className="text-gray-500 text-lg">
-          Think about what makes you feel proud
+        <p className="text-purple-600 text-lg leading-relaxed max-w-2xl mx-auto">
+          Your present strengths are the foundation of your transformation. Recognizing what you cherish about yourself anchors the reality you&apos;re shifting toward.
         </p>
-      </div>
+      </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <Textarea

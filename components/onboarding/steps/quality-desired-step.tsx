@@ -30,14 +30,19 @@ export function QualityDesiredStep({ onNext, onBack, data, updateData }: Quality
       animate={{ opacity: 1 }}
       className="text-center space-y-12 p-8"
     >
-      <div className="space-y-4">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="space-y-4"
+      >
         <h2 className="text-4xl font-light text-gray-800">
           What is one quality you wish you had?
         </h2>
-        <p className="text-gray-500 text-lg">
-          Imagine the person you aspire to become
+        <p className="text-purple-600 text-lg leading-relaxed max-w-2xl mx-auto">
+          This is the bridge to your future self. By naming what you desire, you begin to cultivate it. The universe responds to clear intention.
         </p>
-      </div>
+      </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <Textarea

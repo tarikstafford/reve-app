@@ -30,14 +30,19 @@ export function IdolStep({ onNext, onBack, data, updateData }: IdolStepProps) {
       animate={{ opacity: 1 }}
       className="text-center space-y-12 p-8"
     >
-      <div className="space-y-4">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="space-y-4"
+      >
         <h2 className="text-4xl font-light text-gray-800">
           Who is one person you idolize?
         </h2>
-        <p className="text-gray-500 text-lg">
-          Someone who inspires you to be better
+        <p className="text-purple-600 text-lg leading-relaxed max-w-2xl mx-auto">
+          The people we admire reflect qualities we&apos;re ready to embody. Their essence becomes part of the vision you&apos;re manifesting.
         </p>
-      </div>
+      </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <Input

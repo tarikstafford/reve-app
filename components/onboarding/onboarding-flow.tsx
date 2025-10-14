@@ -59,20 +59,23 @@ export function OnboardingFlow() {
   }
 
   const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 1000 : -1000,
-      opacity: 0
-    }),
+    enter: {
+      y: 20,
+      opacity: 0,
+      scale: 0.98
+    },
     center: {
       zIndex: 1,
-      x: 0,
-      opacity: 1
+      y: 0,
+      opacity: 1,
+      scale: 1
     },
-    exit: (direction: number) => ({
+    exit: {
       zIndex: 0,
-      x: direction < 0 ? 1000 : -1000,
-      opacity: 0
-    })
+      y: -20,
+      opacity: 0,
+      scale: 0.98
+    }
   }
 
   const renderStep = () => {
@@ -109,17 +112,16 @@ export function OnboardingFlow() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 p-4">
-      <AnimatePresence initial={false} custom={direction} mode="wait">
+      <AnimatePresence initial={false} mode="wait">
         <motion.div
           key={currentStep}
-          custom={direction}
           variants={slideVariants}
           initial="enter"
           animate="center"
           exit="exit"
           transition={{
-            x: { type: 'spring', stiffness: 300, damping: 30 },
-            opacity: { duration: 0.2 }
+            duration: 0.4,
+            ease: [0.4, 0, 0.2, 1]
           }}
           className="w-full max-w-2xl"
         >

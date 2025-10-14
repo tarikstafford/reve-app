@@ -29,14 +29,19 @@ export function NameStep({ onNext, data, updateData }: NameStepProps) {
       animate={{ opacity: 1 }}
       className="text-center space-y-12 p-8"
     >
-      <div className="space-y-4">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="space-y-4"
+      >
         <h2 className="text-4xl font-light text-gray-800">
           What is your name?
         </h2>
-        <p className="text-gray-500 text-lg">
-          Let&apos;s begin with something simple
+        <p className="text-purple-600 text-lg leading-relaxed">
+          Every journey begins with an introduction. We&apos;re here to help you understand the universe you&apos;re creating.
         </p>
-      </div>
+      </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <Input
