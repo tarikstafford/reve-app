@@ -60,7 +60,14 @@ export async function generateImage(
     }
 
     const generateData: ImageGenerationResponse = await generateResponse.json()
+
+    console.log('Kie.ai image generation response:', JSON.stringify(generateData, null, 2))
+
     const taskId = generateData.taskId
+
+    if (!taskId) {
+      throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
+    }
 
     // Poll for completion (max 60 seconds)
     const maxAttempts = 30
@@ -68,6 +75,8 @@ export async function generateImage(
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       await new Promise(resolve => setTimeout(resolve, pollInterval))
+
+      console.log(`Polling Kie.ai image task status (attempt ${attempt + 1}/${maxAttempts}): ${taskId}`)
 
       const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/task/${taskId}`, {
         headers: {
@@ -134,7 +143,14 @@ export async function generateVideoFromImage(
     }
 
     const generateData: VideoGenerationResponse = await generateResponse.json()
+
+    console.log('Kie.ai video generation response:', JSON.stringify(generateData, null, 2))
+
     const taskId = generateData.taskId
+
+    if (!taskId) {
+      throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
+    }
 
     // Poll for completion (max 5 minutes for video generation)
     const maxAttempts = 60
@@ -142,6 +158,8 @@ export async function generateVideoFromImage(
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       await new Promise(resolve => setTimeout(resolve, pollInterval))
+
+      console.log(`Polling Kie.ai video task status (attempt ${attempt + 1}/${maxAttempts}): ${taskId}`)
 
       const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/task/${taskId}`, {
         headers: {
