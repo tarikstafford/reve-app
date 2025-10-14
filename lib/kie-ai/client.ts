@@ -27,10 +27,14 @@ interface TaskStatusResponse {
   msg: string
   data: {
     taskId: string
-    status: 'pending' | 'processing' | 'completed' | 'failed' | 'success'
-    imageUrl?: string
-    videoUrl?: string
-    error?: string
+    status: string // Can be "SUCCESS", "PENDING", "PROCESSING", "FAILED", etc.
+    successFlag?: number // 1 for success
+    response?: {
+      resultUrls?: string[] // Array of result URLs
+    }
+    errorCode?: string | null
+    errorMessage?: string | null
+    progress?: string
   }
 }
 
@@ -104,23 +108,25 @@ export async function generateImage(
         throw new Error(`Failed to check image task status: ${statusData.msg}`)
       }
 
-      // Check if task is complete
-      if (statusData.data.status === 'completed' || statusData.data.status === 'success') {
-        // Try different possible field names for the image URL
-        const imageUrl = statusData.data.imageUrl || (statusData.data as any).image_url || (statusData.data as any).url
+      // Check if task is complete (successFlag === 1 or status === "SUCCESS")
+      if (statusData.data.successFlag === 1 || statusData.data.status === 'SUCCESS') {
+        // Extract image URL from response.resultUrls array
+        const imageUrl = statusData.data.response?.resultUrls?.[0]
 
         if (imageUrl) {
           console.log(`Image generation complete: ${imageUrl}`)
           return imageUrl
         } else {
           console.warn('Task marked as complete but no image URL found. Full response:', JSON.stringify(statusData, null, 2))
-          // Continue polling in case URL comes in next response
+          throw new Error('Image generation completed but no URL returned')
         }
       }
 
-      if (statusData.data.status === 'failed') {
-        throw new Error(`Image generation failed: ${statusData.data.error || 'Unknown error'}`)
+      // Check for failure
+      if (statusData.data.status === 'FAILED' || statusData.data.errorCode) {
+        throw new Error(`Image generation failed: ${statusData.data.errorMessage || 'Unknown error'}`)
       }
+
     }
 
     throw new Error('Image generation timed out after 60 seconds')
@@ -205,22 +211,23 @@ export async function generateVideoFromImage(
         throw new Error(`Failed to check video task status: ${statusData.msg}`)
       }
 
-      // Check if task is complete
-      if (statusData.data.status === 'completed' || statusData.data.status === 'success') {
-        // Try different possible field names for the video URL
-        const videoUrl = statusData.data.videoUrl || (statusData.data as any).video_url || (statusData.data as any).url
+      // Check if task is complete (successFlag === 1 or status === "SUCCESS")
+      if (statusData.data.successFlag === 1 || statusData.data.status === 'SUCCESS') {
+        // Extract video URL from response.resultUrls array
+        const videoUrl = statusData.data.response?.resultUrls?.[0]
 
         if (videoUrl) {
           console.log(`Video generation complete: ${videoUrl}`)
           return videoUrl
         } else {
           console.warn('Task marked as complete but no video URL found. Full response:', JSON.stringify(statusData, null, 2))
-          // Continue polling in case URL comes in next response
+          throw new Error('Video generation completed but no URL returned')
         }
       }
 
-      if (statusData.data.status === 'failed') {
-        throw new Error(`Video generation failed: ${statusData.data.error || 'Unknown error'}`)
+      // Check for failure
+      if (statusData.data.status === 'FAILED' || statusData.data.errorCode) {
+        throw new Error(`Video generation failed: ${statusData.data.errorMessage || 'Unknown error'}`)
       }
     }
 
