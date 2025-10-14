@@ -23,7 +23,9 @@ export function DreamArchive({ onRefreshRef }: DreamArchiveProps) {
 
   const loadDreams = useCallback(async () => {
     try {
-      const response = await fetch('/api/dreams')
+      const response = await fetch('/api/dreams', {
+        cache: 'no-store'
+      })
       const data = await response.json()
 
       if (data.success) {
