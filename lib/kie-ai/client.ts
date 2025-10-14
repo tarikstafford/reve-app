@@ -7,17 +7,19 @@ const KIE_AI_BASE_URL = 'https://api.kie.ai'
 const KIE_AI_API_KEY = process.env.KIE_AI_API_KEY || 'dummy-key-for-build'
 
 interface ImageGenerationResponse {
-  taskId: string
-  status: 'pending' | 'processing' | 'completed' | 'failed'
-  imageUrl?: string
-  error?: string
+  code: number
+  msg: string
+  data: {
+    taskId: string
+  }
 }
 
 interface VideoGenerationResponse {
-  taskId: string
-  status: 'pending' | 'processing' | 'completed' | 'failed'
-  videoUrl?: string
-  error?: string
+  code: number
+  msg: string
+  data: {
+    taskId: string
+  }
 }
 
 interface TaskStatusResponse {
@@ -63,7 +65,11 @@ export async function generateImage(
 
     console.log('Kie.ai image generation response:', JSON.stringify(generateData, null, 2))
 
-    const taskId = generateData.taskId
+    if (generateData.code !== 200) {
+      throw new Error(`Kie.ai image generation failed: ${generateData.msg}`)
+    }
+
+    const taskId = generateData.data?.taskId
 
     if (!taskId) {
       throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
@@ -146,7 +152,11 @@ export async function generateVideoFromImage(
 
     console.log('Kie.ai video generation response:', JSON.stringify(generateData, null, 2))
 
-    const taskId = generateData.taskId
+    if (generateData.code !== 200) {
+      throw new Error(`Kie.ai video generation failed: ${generateData.msg}`)
+    }
+
+    const taskId = generateData.data?.taskId
 
     if (!taskId) {
       throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
