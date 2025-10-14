@@ -57,25 +57,7 @@ Respond in JSON format:
 
     const analysis = JSON.parse(interpretationResponse.choices[0].message.content || '{}')
 
-    // Generate surrealist art representing the dream using Kie.ai (no text in image)
-    const imagePrompt = `A surrealist dreamscape with ethereal, abstract imagery. ${content.slice(0, 400)}. Soft colors, dreamlike atmosphere, mystical, cinematic lighting. NO TEXT, NO WORDS, NO LETTERS in the image.`
-
-    let imageUrl = ''
-    let videoUrl = ''
-
-    try {
-      // Generate image using Kie.ai 4O Image API
-      imageUrl = await generateImage(imagePrompt, '1:1')
-
-      // Generate video from the image using Sora 2
-      const videoPrompt = `Ethereal dream sequence with slow, flowing movements. The scene breathes and transforms subtly, with soft particles floating through space. Gentle, mystical atmosphere with dreamy lighting transitions.`
-      videoUrl = await generateVideoFromImage(videoPrompt, imageUrl, '10s', 'landscape')
-    } catch (error) {
-      console.error('Error generating media with Kie.ai:', error)
-      // Continue without media if generation fails
-    }
-
-    // Save dream to database
+    // Save dream to database immediately WITHOUT media (will be generated async)
     const { data: dream, error: dreamError } = await supabase
       .from('dreams')
       .insert({
@@ -83,8 +65,7 @@ Respond in JSON format:
         title,
         content,
         interpretation: analysis.interpretation,
-        image_url: imageUrl,
-        video_url: videoUrl,
+        media_status: 'pending',
         themes: analysis.themes || [],
         emotions: analysis.emotions || []
       })
@@ -98,6 +79,27 @@ Respond in JSON format:
         { status: 500 }
       )
     }
+
+    // Queue media generation (async - don't wait for it)
+    const imagePrompt = `A surrealist dreamscape with ethereal, abstract imagery. ${content.slice(0, 400)}. Soft colors, dreamlike atmosphere, mystical, cinematic lighting. NO TEXT, NO WORDS, NO LETTERS in the image.`
+    const videoPrompt = `Ethereal dream sequence with slow, flowing movements. The scene breathes and transforms subtly, with soft particles floating through space. Gentle, mystical atmosphere with dreamy lighting transitions.`
+
+    await supabase
+      .from('media_generation_queue')
+      .insert({
+        entity_type: 'dream',
+        entity_id: dream.id,
+        user_id: user.id,
+        image_prompt: imagePrompt,
+        video_prompt: videoPrompt,
+        status: 'pending'
+      })
+
+    // Trigger background generation (fire and forget)
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/media/process-queue`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    }).catch(err => console.error('Failed to trigger media generation:', err))
 
     return NextResponse.json({
       success: true,

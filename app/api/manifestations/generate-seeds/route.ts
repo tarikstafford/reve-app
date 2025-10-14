@@ -42,36 +42,18 @@ Write in second person ("You are..."). Make it dreamlike, empowering, and suitab
 
       const narrative = narrativeResponse.choices[0].message.content
 
-      // Generate image and video using Kie.ai
-      const imagePrompt = `Surrealist dreamscape representing ${theme}: ethereal, beautiful, soft pastel colors, floating elements, peaceful and empowering mood. Abstract and artistic, like a lucid dream. NO TEXT, NO WORDS, NO LETTERS in the image.`
-
-      let imageUrl = ''
-      let videoUrl = ''
-
-      try {
-        // Generate image
-        imageUrl = await generateImage(imagePrompt, '1:1')
-
-        // Generate video from image
-        const videoPrompt = `Slow, gentle movements in a dreamlike atmosphere. Floating particles, soft transitions, peaceful and meditative. Ethereal lighting with subtle color shifts.`
-        videoUrl = await generateVideoFromImage(videoPrompt, imageUrl, '10s', 'landscape')
-      } catch (error) {
-        console.error(`Error generating media for ${theme}:`, error)
-      }
-
       // Generate audio using ElevenLabs (placeholder for now)
       // In production, you would call ElevenLabs API here
       const audioUrl = null // TODO: Implement ElevenLabs integration
 
-      // Save to database
+      // Save manifestation to database immediately WITHOUT media (will be generated async)
       const { data: manifestation, error } = await supabase
         .from('manifestations')
         .insert({
           user_id: userId,
           title: `${theme.charAt(0).toUpperCase() + theme.slice(1)} Manifestation`,
           narrative: narrative,
-          image_url: imageUrl,
-          video_url: videoUrl,
+          media_status: 'pending',
           audio_url: audioUrl,
           is_seed: true
         })
@@ -80,11 +62,32 @@ Write in second person ("You are..."). Make it dreamlike, empowering, and suitab
 
       if (!error && manifestation) {
         manifestations.push(manifestation)
+
+        // Queue media generation for this manifestation
+        const imagePrompt = `Surrealist dreamscape representing ${theme}: ethereal, beautiful, soft pastel colors, floating elements, peaceful and empowering mood. Abstract and artistic, like a lucid dream. NO TEXT, NO WORDS, NO LETTERS in the image.`
+        const videoPrompt = `Slow, gentle movements in a dreamlike atmosphere. Floating particles, soft transitions, peaceful and meditative. Ethereal lighting with subtle color shifts.`
+
+        await supabase
+          .from('media_generation_queue')
+          .insert({
+            entity_type: 'manifestation',
+            entity_id: manifestation.id,
+            user_id: userId,
+            image_prompt: imagePrompt,
+            video_prompt: videoPrompt,
+            status: 'pending'
+          })
       }
 
-      // Add small delay to avoid rate limits
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Small delay between manifestations
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
+
+    // Trigger media generation queue processing (fire and forget)
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/media/process-queue`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    }).catch(err => console.error('Failed to trigger media generation:', err))
 
     return NextResponse.json({
       success: true,
