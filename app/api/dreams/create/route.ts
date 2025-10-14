@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
+import { generateImage, generateVideoFromImage } from '@/lib/kie-ai/client'
 
 const getOpenAI = () => new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build'
@@ -56,19 +57,23 @@ Respond in JSON format:
 
     const analysis = JSON.parse(interpretationResponse.choices[0].message.content || '{}')
 
-    // Generate surrealist art representing the dream
-    const imagePrompt = `Surrealist dreamscape representing: ${content.slice(0, 500)}. Ethereal, abstract, soft colors, dreamlike atmosphere, artistic interpretation.`
+    // Generate surrealist art representing the dream using Kie.ai (no text in image)
+    const imagePrompt = `A surrealist dreamscape with ethereal, abstract imagery. ${content.slice(0, 400)}. Soft colors, dreamlike atmosphere, mystical, cinematic lighting. NO TEXT, NO WORDS, NO LETTERS in the image.`
 
-    const imageResponse = await openai.images.generate({
-      model: 'dall-e-3',
-      prompt: imagePrompt,
-      n: 1,
-      size: '1024x1024',
-      quality: 'standard',
-      style: 'natural'
-    })
+    let imageUrl = ''
+    let videoUrl = ''
 
-    const imageUrl = imageResponse.data?.[0]?.url || ''
+    try {
+      // Generate image using Kie.ai 4O Image API
+      imageUrl = await generateImage(imagePrompt, '1:1')
+
+      // Generate video from the image using Sora 2
+      const videoPrompt = `Ethereal dream sequence with slow, flowing movements. The scene breathes and transforms subtly, with soft particles floating through space. Gentle, mystical atmosphere with dreamy lighting transitions.`
+      videoUrl = await generateVideoFromImage(videoPrompt, imageUrl, '10s', 'landscape')
+    } catch (error) {
+      console.error('Error generating media with Kie.ai:', error)
+      // Continue without media if generation fails
+    }
 
     // Save dream to database
     const { data: dream, error: dreamError } = await supabase
@@ -79,6 +84,7 @@ Respond in JSON format:
         content,
         interpretation: analysis.interpretation,
         image_url: imageUrl,
+        video_url: videoUrl,
         themes: analysis.themes || [],
         emotions: analysis.emotions || []
       })

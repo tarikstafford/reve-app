@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
+import { generateImage, generateVideoFromImage } from '@/lib/kie-ai/client'
 
 const getOpenAI = () => new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build'
@@ -41,19 +42,22 @@ Write in second person ("You are..."). Make it dreamlike, empowering, and suitab
 
       const narrative = narrativeResponse.choices[0].message.content
 
-      // Generate image
-      const imagePrompt = `Surrealist dreamscape representing ${theme}: ethereal, beautiful, soft pastel colors, floating elements, peaceful and empowering mood. Abstract and artistic, like a lucid dream.`
+      // Generate image and video using Kie.ai
+      const imagePrompt = `Surrealist dreamscape representing ${theme}: ethereal, beautiful, soft pastel colors, floating elements, peaceful and empowering mood. Abstract and artistic, like a lucid dream. NO TEXT, NO WORDS, NO LETTERS in the image.`
 
-      const imageResponse = await openai.images.generate({
-        model: 'dall-e-3',
-        prompt: imagePrompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'standard',
-        style: 'natural'
-      })
+      let imageUrl = ''
+      let videoUrl = ''
 
-      const imageUrl = imageResponse.data?.[0]?.url || ''
+      try {
+        // Generate image
+        imageUrl = await generateImage(imagePrompt, '1:1')
+
+        // Generate video from image
+        const videoPrompt = `Slow, gentle movements in a dreamlike atmosphere. Floating particles, soft transitions, peaceful and meditative. Ethereal lighting with subtle color shifts.`
+        videoUrl = await generateVideoFromImage(videoPrompt, imageUrl, '10s', 'landscape')
+      } catch (error) {
+        console.error(`Error generating media for ${theme}:`, error)
+      }
 
       // Generate audio using ElevenLabs (placeholder for now)
       // In production, you would call ElevenLabs API here
@@ -67,6 +71,7 @@ Write in second person ("You are..."). Make it dreamlike, empowering, and suitab
           title: `${theme.charAt(0).toUpperCase() + theme.slice(1)} Manifestation`,
           narrative: narrative,
           image_url: imageUrl,
+          video_url: videoUrl,
           audio_url: audioUrl,
           is_seed: true
         })

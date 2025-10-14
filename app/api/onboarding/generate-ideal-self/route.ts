@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { generateImage } from '@/lib/kie-ai/client'
 
 const getOpenAI = () => new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build'
@@ -39,19 +40,15 @@ Write in second person ("You are..."). Be poetic, dreamlike, and encouraging. Fo
 
     const narrative = narrativeResponse.choices[0].message.content
 
-    // Generate image using DALL-E 3
-    const imagePrompt = `A beautiful, ethereal portrait representing an ideal self: embodying ${qualityLoved} while growing into ${qualityDesired}, inspired by the essence of ${idol}. Surrealist, dreamlike, soft lighting, gentle colors, transcendent mood. Artistic and abstract, not a specific person.`
+    // Generate image using Kie.ai
+    const imagePrompt = `A beautiful, ethereal portrait representing an ideal self: embodying ${qualityLoved} while growing into ${qualityDesired}, inspired by the essence of ${idol}. Surrealist, dreamlike, soft lighting, gentle colors, transcendent mood. Artistic and abstract, not a specific person. NO TEXT, NO WORDS, NO LETTERS in the image.`
 
-    const imageResponse = await openai.images.generate({
-      model: 'dall-e-3',
-      prompt: imagePrompt,
-      n: 1,
-      size: '1024x1024',
-      quality: 'standard',
-      style: 'natural'
-    })
-
-    const imageUrl = imageResponse.data?.[0]?.url || ''
+    let imageUrl = ''
+    try {
+      imageUrl = await generateImage(imagePrompt, '1:1')
+    } catch (error) {
+      console.error('Error generating ideal self image:', error)
+    }
 
     return NextResponse.json({
       success: true,
