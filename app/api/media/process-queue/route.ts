@@ -14,8 +14,8 @@ import {
  *
  * Processes pending media generation tasks:
  * 1. Fetches pending tasks from queue
- * 2. Generates images with Kie.ai
- * 3. Generates videos from images with Sora 2
+ * 2. Generates images with Kie.ai 4O Image API
+ * 3. Generates videos from images with Kie.ai Veo3 API
  * 4. Downloads and uploads to Supabase Storage
  * 5. Updates entity with media URLs
  */
@@ -91,9 +91,9 @@ async function processQueue() {
 
       const imageUrl = await downloadAndUploadToStorage(kieImageUrl, imagePath)
 
-      // Step 3: Generate video from image with Sora 2
-      console.log('Generating video...')
-      const kieVideoUrl = await generateVideoFromImage(task.video_prompt, kieImageUrl, '10s', 'landscape')
+      // Step 3: Generate video from image with Veo3
+      console.log('Generating video with Veo3...')
+      const kieVideoUrl = await generateVideoFromImage(task.video_prompt, kieImageUrl, '16:9')
 
       // Step 4: Upload video to Supabase Storage
       console.log('Uploading video to Supabase Storage...')

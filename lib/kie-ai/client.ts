@@ -113,34 +113,32 @@ export async function generateImage(
 }
 
 /**
- * Generate video from image using Kie.ai Sora 2 API
+ * Generate video from image using Kie.ai Veo3 API
  * @param prompt - Description of the video motion/animation
  * @param imageUrl - URL of the source image
- * @param duration - Video duration ('10s' or '15s')
- * @param aspectRatio - Video aspect ratio
+ * @param aspectRatio - Video aspect ratio ('16:9' or '9:16')
  * @returns Video URL once generation is complete
  */
 export async function generateVideoFromImage(
   prompt: string,
   imageUrl: string,
-  duration: '10s' | '15s' = '10s',
-  aspectRatio: 'landscape' | 'portrait' = 'landscape'
+  aspectRatio: '16:9' | '9:16' = '16:9'
 ): Promise<string> {
   try {
-    // Create video generation task
-    const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/sora2/image-to-video`, {
+    // Create video generation task with Veo3
+    const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/veo/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${KIE_AI_API_KEY}`
       },
       body: JSON.stringify({
+        model: 'veo3',
         prompt,
-        image_urls: [imageUrl],
-        n_frames: duration,
-        aspect_ratio: aspectRatio,
-        remove_watermark: true,
-        size: 'standard'
+        imageUrls: [imageUrl],
+        aspectRatio: aspectRatio,
+        enableFallback: true,
+        enableTranslation: true
       })
     })
 

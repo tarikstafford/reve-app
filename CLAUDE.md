@@ -39,7 +39,7 @@ This document provides context for Claude Code when working on the Rêve applica
 
 ### 2. Cost Optimization with Kie.ai
 
-**Decision:** Use Kie.ai instead of OpenAI DALL-E 3 + Sora for media generation.
+**Decision:** Use Kie.ai instead of OpenAI DALL-E 3 + official video APIs for media generation.
 
 **Cost Savings:**
 - DALL-E 3: ~$0.08 per image + Sora: $3-5 per 10s video = $3-5 total
@@ -48,10 +48,12 @@ This document provides context for Claude Code when working on the Rêve applica
 
 **Implementation:**
 - `lib/kie-ai/client.ts` - Kie.ai API wrapper
-- Polling-based generation (check status every 2-5 seconds)
+- Image generation: 4O Image API with polling every 2 seconds
+- Video generation: Veo3 API (Google's model) with polling every 5 seconds
+- Both use same polling pattern (unified approach)
 - Automatic retry logic with exponential backoff
 
-**IMPORTANT:** Always use Kie.ai for image/video generation, not OpenAI APIs.
+**IMPORTANT:** Always use Kie.ai for image/video generation, not OpenAI APIs. Veo3 replaced Sora 2 for unified polling approach.
 
 ### 3. Permanent Storage Pattern
 

@@ -10,7 +10,7 @@ A beautiful, ethereal progressive web application for dream journaling, AI-power
 - **Beautiful Onboarding Flow**: Guided journey to create your ideal self with AI-generated portrait
 - **Dream Logging**: Text and voice input for capturing dreams
 - **AI Dream Interpretation**: GPT-4o powered analysis of dreams, themes, and emotions
-- **Dream Visualization**: Kie.ai generated surrealist images and Sora 2 videos for each dream
+- **Dream Visualization**: Kie.ai generated surrealist images and Veo3 videos for each dream
 - **Async Media Generation**: Background queue processing with real-time status updates
 - **Dream Archive**: Searchable library with filtering by themes and emotions, auto-polling for media updates
 - **Dream Manifestations**: AI-generated narratives with audio playback for positive reinforcement (based on IRT)
@@ -31,8 +31,8 @@ A beautiful, ethereal progressive web application for dream journaling, AI-power
 ### Backend & Services
 - **Supabase** - PostgreSQL database, authentication (Google OAuth), and storage
 - **OpenAI GPT-4o** - Dream interpretation and conversation
-- **Kie.ai** - Cost-effective image generation (95% cheaper than DALL-E)
-- **Sora 2** - Video generation from images via Kie.ai
+- **Kie.ai 4O Image API** - Cost-effective image generation (95% cheaper than DALL-E)
+- **Kie.ai Veo3 API** - High-quality video generation from images (Google's Veo3 model)
 - **OpenAI Whisper** - Voice transcription
 - **Web Speech API** - Text-to-speech for manifestations
 - **Vercel Cron** - Scheduled background job processing
@@ -184,9 +184,9 @@ Comprehensive research page (`/science`) with:
 **Background Media Generation:**
 1. Vercel Cron runs `/api/media/process-queue` every minute
 2. Fetches next pending task from queue (FIFO)
-3. Generates image with Kie.ai 4O Image API (~30 seconds)
+3. Generates image with Kie.ai 4O Image API (~30 seconds, polls every 2s)
 4. Downloads and uploads image to Supabase Storage
-5. Generates video from image with Sora 2 (~2-5 minutes)
+5. Generates video from image with Kie.ai Veo3 (~2-5 minutes, polls every 5s)
 6. Downloads and uploads video to Supabase Storage
 7. Updates dream with URLs and `media_status: 'completed'`
 8. Frontend polls every 5 seconds and auto-updates when complete
