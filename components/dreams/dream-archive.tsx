@@ -1,24 +1,76 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Dream } from '@/lib/db/types'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search, Calendar, Sparkles } from 'lucide-react'
+import { Search, Calendar, Sparkles, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
 import { DreamDetailDialog } from './dream-detail-dialog'
 
-export function DreamArchive() {
+interface DreamArchiveProps {
+  onRefreshRef?: React.MutableRefObject<(() => void) | null>
+}
+
+export function DreamArchive({ onRefreshRef }: DreamArchiveProps) {
   const [dreams, setDreams] = useState<Dream[]>([])
   const [filteredDreams, setFilteredDreams] = useState<Dream[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedDream, setSelectedDream] = useState<Dream | null>(null)
   const [loading, setLoading] = useState(true)
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  const loadDreams = useCallback(async () => {
+    try {
+      const response = await fetch('/api/dreams')
+      const data = await response.json()
+
+      if (data.success) {
+        setDreams(data.dreams)
+        setFilteredDreams(data.dreams)
+      }
+    } catch (error) {
+      console.error('Error loading dreams:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // Expose refresh function to parent
+  useEffect(() => {
+    if (onRefreshRef) {
+      onRefreshRef.current = loadDreams
+    }
+  }, [onRefreshRef, loadDreams])
 
   useEffect(() => {
     loadDreams()
   }, [])
+
+  // Poll for media status updates on dreams that are pending/processing
+  useEffect(() => {
+    const pendingDreams = dreams.filter(
+      d => d.media_status === 'pending' || d.media_status === 'processing'
+    )
+
+    if (pendingDreams.length > 0) {
+      // Poll every 5 seconds
+      pollIntervalRef.current = setInterval(() => {
+        loadDreams()
+      }, 5000)
+    } else if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current)
+      pollIntervalRef.current = null
+    }
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+        pollIntervalRef.current = null
+      }
+    }
+  }, [dreams, loadDreams])
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -35,22 +87,6 @@ export function DreamArchive() {
       setFilteredDreams(dreams)
     }
   }, [searchQuery, dreams])
-
-  const loadDreams = async () => {
-    try {
-      const response = await fetch('/api/dreams')
-      const data = await response.json()
-
-      if (data.success) {
-        setDreams(data.dreams)
-        setFilteredDreams(data.dreams)
-      }
-    } catch (error) {
-      console.error('Error loading dreams:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -96,7 +132,7 @@ export function DreamArchive() {
                   className="cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden group"
                   onClick={() => setSelectedDream(dream)}
                 >
-                  {dream.image_url && (
+                  {dream.image_url ? (
                     <div className="relative h-48 overflow-hidden">
                       <motion.img
                         src={dream.image_url}
@@ -110,7 +146,21 @@ export function DreamArchive() {
                         </h3>
                       </div>
                     </div>
-                  )}
+                  ) : dream.media_status === 'pending' || dream.media_status === 'processing' ? (
+                    <div className="relative h-48 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                      <div className="text-center space-y-3">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                        >
+                          <Loader2 className="w-10 h-10 text-purple-500 mx-auto" />
+                        </motion.div>
+                        <p className="text-sm text-purple-700 font-medium">
+                          Generating visualization...
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
                   <CardContent className="p-4 space-y-3">
                     {!dream.image_url && (
                       <h3 className="font-medium text-lg text-gray-800 line-clamp-1">

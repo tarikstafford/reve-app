@@ -26,6 +26,8 @@ export interface Dream {
   voice_url: string | null
   interpretation: string | null
   image_url: string | null
+  video_url: string | null
+  media_status: 'pending' | 'processing' | 'completed' | 'failed'
   themes: string[]
   emotions: string[]
   created_at: string
@@ -39,7 +41,9 @@ export interface Manifestation {
   title: string
   narrative: string
   image_url: string | null
+  video_url: string | null
   audio_url: string | null
+  media_status: 'pending' | 'processing' | 'completed' | 'failed'
   is_seed: boolean
   play_count: number
   created_at: string

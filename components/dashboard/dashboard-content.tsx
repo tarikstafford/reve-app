@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Moon, Sparkles, MessageCircle, User } from 'lucide-react'
 import { DreamArchive } from '@/components/dreams/dream-archive'
@@ -9,6 +10,15 @@ import { SubconsciousChat } from '@/components/subconscious/subconscious-chat'
 import { ProfileView } from '@/components/profile/profile-view'
 
 export function DashboardContent() {
+  const dreamArchiveRefreshRef = useRef<(() => void) | null>(null)
+
+  const handleDreamSaved = () => {
+    // Trigger refresh of dream archive
+    if (dreamArchiveRefreshRef.current) {
+      dreamArchiveRefreshRef.current()
+    }
+  }
+
   return (
     <Tabs defaultValue="dreams" className="w-full">
       <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-4 mb-8 bg-white/80 backdrop-blur p-1 rounded-full">
@@ -32,9 +42,9 @@ export function DashboardContent() {
 
       <TabsContent value="dreams" className="space-y-6">
         <div className="flex justify-center">
-          <DreamLogDialog />
+          <DreamLogDialog onDreamSaved={handleDreamSaved} />
         </div>
-        <DreamArchive />
+        <DreamArchive onRefreshRef={dreamArchiveRefreshRef} />
       </TabsContent>
 
       <TabsContent value="manifestations">

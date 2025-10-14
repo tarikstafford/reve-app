@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Dream } from '@/lib/db/types'
 import { format } from 'date-fns'
-import { Calendar, Sparkles } from 'lucide-react'
+import { Calendar, Sparkles, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 interface DreamDetailDialogProps {
@@ -13,6 +13,9 @@ interface DreamDetailDialogProps {
 }
 
 export function DreamDetailDialog({ dream, open, onClose }: DreamDetailDialogProps) {
+  const showMediaLoading = dream.media_status === 'pending' || dream.media_status === 'processing'
+  const showMedia = dream.media_status === 'completed'
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -27,7 +30,28 @@ export function DreamDetailDialog({ dream, open, onClose }: DreamDetailDialogPro
         </DialogHeader>
 
         <div className="space-y-8 pt-4">
-          {dream.image_url && (
+          {/* Video - Priority display */}
+          {showMedia && dream.video_url && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="rounded-2xl overflow-hidden shadow-lg"
+            >
+              <video
+                src={dream.video_url}
+                controls
+                autoPlay
+                loop
+                muted
+                className="w-full h-auto"
+              >
+                Your browser does not support the video tag.
+              </video>
+            </motion.div>
+          )}
+
+          {/* Image - Fallback if no video */}
+          {showMedia && dream.image_url && !dream.video_url && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -38,6 +62,26 @@ export function DreamDetailDialog({ dream, open, onClose }: DreamDetailDialogPro
                 alt={dream.title || 'Dream visualization'}
                 className="w-full h-auto"
               />
+            </motion.div>
+          )}
+
+          {/* Loading state */}
+          {showMediaLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-12 flex flex-col items-center justify-center gap-4 min-h-[300px]"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              >
+                <Loader2 className="w-12 h-12 text-purple-500" />
+              </motion.div>
+              <p className="text-purple-700 font-medium text-lg">Generating your dream visualization...</p>
+              <p className="text-sm text-purple-600 text-center max-w-md">
+                This usually takes 2-5 minutes. You can close this and check back later!
+              </p>
             </motion.div>
           )}
 
