@@ -23,13 +23,15 @@ interface VideoGenerationResponse {
 }
 
 interface TaskStatusResponse {
-  taskId: string
-  status: 'pending' | 'processing' | 'completed' | 'failed'
-  result?: {
+  code: number
+  msg: string
+  data: {
+    taskId: string
+    status: 'pending' | 'processing' | 'completed' | 'failed' | 'success'
     imageUrl?: string
     videoUrl?: string
+    error?: string
   }
-  error?: string
 }
 
 /**
@@ -84,7 +86,7 @@ export async function generateImage(
 
       console.log(`Polling Kie.ai image task status (attempt ${attempt + 1}/${maxAttempts}): ${taskId}`)
 
-      const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/task/${taskId}`, {
+      const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/gpt4o-image/record-info?taskId=${taskId}`, {
         headers: {
           'Authorization': `Bearer ${KIE_AI_API_KEY}`
         }
@@ -96,12 +98,19 @@ export async function generateImage(
 
       const statusData: TaskStatusResponse = await statusResponse.json()
 
-      if (statusData.status === 'completed' && statusData.result?.imageUrl) {
-        return statusData.result.imageUrl
+      console.log(`Image task status response:`, JSON.stringify(statusData, null, 2))
+
+      if (statusData.code !== 200) {
+        throw new Error(`Failed to check image task status: ${statusData.msg}`)
       }
 
-      if (statusData.status === 'failed') {
-        throw new Error(`Image generation failed: ${statusData.error || 'Unknown error'}`)
+      if ((statusData.data.status === 'completed' || statusData.data.status === 'success') && statusData.data.imageUrl) {
+        console.log(`Image generation complete: ${statusData.data.imageUrl}`)
+        return statusData.data.imageUrl
+      }
+
+      if (statusData.data.status === 'failed') {
+        throw new Error(`Image generation failed: ${statusData.data.error || 'Unknown error'}`)
       }
     }
 
@@ -169,7 +178,7 @@ export async function generateVideoFromImage(
 
       console.log(`Polling Kie.ai video task status (attempt ${attempt + 1}/${maxAttempts}): ${taskId}`)
 
-      const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/task/${taskId}`, {
+      const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/veo/record-info?taskId=${taskId}`, {
         headers: {
           'Authorization': `Bearer ${KIE_AI_API_KEY}`
         }
@@ -181,12 +190,19 @@ export async function generateVideoFromImage(
 
       const statusData: TaskStatusResponse = await statusResponse.json()
 
-      if (statusData.status === 'completed' && statusData.result?.videoUrl) {
-        return statusData.result.videoUrl
+      console.log(`Video task status response:`, JSON.stringify(statusData, null, 2))
+
+      if (statusData.code !== 200) {
+        throw new Error(`Failed to check video task status: ${statusData.msg}`)
       }
 
-      if (statusData.status === 'failed') {
-        throw new Error(`Video generation failed: ${statusData.error || 'Unknown error'}`)
+      if ((statusData.data.status === 'completed' || statusData.data.status === 'success') && statusData.data.videoUrl) {
+        console.log(`Video generation complete: ${statusData.data.videoUrl}`)
+        return statusData.data.videoUrl
+      }
+
+      if (statusData.data.status === 'failed') {
+        throw new Error(`Video generation failed: ${statusData.data.error || 'Unknown error'}`)
       }
     }
 
