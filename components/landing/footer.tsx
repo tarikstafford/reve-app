@@ -34,8 +34,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/landing" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Science
+                <Link href="/science" className="text-gray-400 hover:text-purple-400 transition-colors">
+                  Science & Research
                 </Link>
               </li>
               <li>
@@ -75,13 +75,13 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <Link href="/landing" className="text-gray-400 hover:text-purple-400 transition-colors">
+                <Link href="/science" className="text-gray-400 hover:text-purple-400 transition-colors">
                   All Citations
                 </Link>
               </li>
               <li>
-                <Link href="/landing" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Methodology
+                <Link href="/science" className="text-gray-400 hover:text-purple-400 transition-colors">
+                  Research Page
                 </Link>
               </li>
             </ul>

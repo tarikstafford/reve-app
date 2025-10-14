@@ -104,7 +104,7 @@ export function StoryHero() {
           <Button
             size="lg"
             variant="outline"
-            className="px-12 py-8 text-xl rounded-full border-2 border-white/30 hover:bg-white/10 text-white group backdrop-blur"
+            className="px-12 py-8 text-xl rounded-full border-2 border-white/30 bg-white/5 hover:bg-white/20 text-white group backdrop-blur"
             onClick={signInWithGoogle}
           >
             <LogIn className="w-6 h-6 mr-2 group-hover:scale-110 transition-transform" />
