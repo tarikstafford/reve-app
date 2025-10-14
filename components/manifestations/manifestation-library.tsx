@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Manifestation } from '@/lib/db/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Pause, Volume2, Sparkles } from 'lucide-react'
+import { Play, Volume2, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ManifestationDetailDialog } from './manifestation-detail-dialog'
 

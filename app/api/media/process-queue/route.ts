@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateImage, generateVideoFromImage } from '@/lib/kie-ai/client'
 import {
@@ -21,12 +21,12 @@ import {
  */
 
 // GET handler for Vercel Cron
-export async function GET(request: NextRequest) {
+export async function GET() {
   return processQueue()
 }
 
 // POST handler for manual triggers
-export async function POST(request: NextRequest) {
+export async function POST() {
   return processQueue()
 }
 
@@ -155,7 +155,8 @@ async function processQueue() {
         videoUrl
       })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error('Error generating media:', error)
 
       // Mark task as failed
@@ -163,7 +164,7 @@ async function processQueue() {
         .from('media_generation_queue')
         .update({
           status: task.attempts + 1 >= 3 ? 'failed' : 'pending', // Retry if under 3 attempts
-          error_message: error.message,
+          error_message: errorMessage,
           updated_at: new Date().toISOString()
         })
         .eq('id', task.id)
@@ -177,15 +178,16 @@ async function processQueue() {
 
       return NextResponse.json({
         success: false,
-        error: error.message,
+        error: errorMessage,
         taskId: task.id
       }, { status: 500 })
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     console.error('Queue processor error:', error)
     return NextResponse.json({
       success: false,
-      error: error.message
+      error: errorMessage
     }, { status: 500 })
   }
 }

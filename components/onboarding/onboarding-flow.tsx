@@ -35,12 +35,10 @@ const steps = [
   'ideal-self'
 ] as const
 
-type Step = typeof steps[number]
-
 export function OnboardingFlow() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [data, setData] = useState<Partial<OnboardingData>>({})
-  const [direction, setDirection] = useState(0)
+  const [, setDirection] = useState(0)
 
   const currentStep = steps[currentStepIndex]
 

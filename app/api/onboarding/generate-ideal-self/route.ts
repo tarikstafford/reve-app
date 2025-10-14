@@ -9,7 +9,7 @@ const getOpenAI = () => new OpenAI({
 export async function POST(request: NextRequest) {
   try {
     const openai = getOpenAI()
-    const { name, age, qualityLoved, qualityDesired, idol, selfie } = await request.json()
+    const { name, age, qualityLoved, qualityDesired, idol } = await request.json()
 
     // Generate narrative using GPT-4
     const narrativePrompt = `You are a compassionate life coach helping someone envision their ideal self. Based on the following information, write a beautiful, inspiring narrative (2-3 sentences) about who they are becoming:

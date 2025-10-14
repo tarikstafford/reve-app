@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { User, Sparkles, Crown, Settings } from 'lucide-react'
+import { Sparkles, Crown, Settings } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { format } from 'date-fns'
 

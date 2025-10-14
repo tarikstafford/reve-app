@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
-import { generateImage, generateVideoFromImage } from '@/lib/kie-ai/client'
 
 const getOpenAI = () => new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build'
