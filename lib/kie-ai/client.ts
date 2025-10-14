@@ -27,14 +27,20 @@ interface TaskStatusResponse {
   msg: string
   data: {
     taskId: string
-    status: string // Can be "SUCCESS", "PENDING", "PROCESSING", "FAILED", etc.
+    status?: string // Can be "SUCCESS", "PENDING", "GENERATING", "FAILED", etc.
     successFlag?: number // 1 for success
     response?: {
+      taskId?: string
       resultUrls?: string[] // Array of result URLs
+      originUrls?: string[] // Original URLs (for video)
+      resolution?: string // Video resolution (e.g., "1080p")
     }
     errorCode?: string | null
     errorMessage?: string | null
     progress?: string
+    fallbackFlag?: boolean
+    completeTime?: string
+    createTime?: string
   }
 }
 
@@ -102,7 +108,9 @@ export async function generateImage(
 
       const statusData: TaskStatusResponse = await statusResponse.json()
 
-      console.log(`Image task status response:`, JSON.stringify(statusData, null, 2))
+      const currentStatus = statusData.data.status || 'UNKNOWN'
+      const progress = statusData.data.progress || '0'
+      console.log(`Image task status: ${currentStatus} (${progress}) - Attempt ${attempt + 1}/${maxAttempts}`)
 
       if (statusData.code !== 200) {
         throw new Error(`Failed to check image task status: ${statusData.msg}`)
@@ -205,7 +213,9 @@ export async function generateVideoFromImage(
 
       const statusData: TaskStatusResponse = await statusResponse.json()
 
-      console.log(`Video task status response:`, JSON.stringify(statusData, null, 2))
+      const currentStatus = statusData.data.status || 'UNKNOWN'
+      const progress = statusData.data.progress || '0'
+      console.log(`Video task status: ${currentStatus} (${progress}) - Attempt ${attempt + 1}/${maxAttempts}`)
 
       if (statusData.code !== 200) {
         throw new Error(`Failed to check video task status: ${statusData.msg}`)
