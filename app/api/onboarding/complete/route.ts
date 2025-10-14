@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         ? `https://${process.env.VERCEL_URL}`
         : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-      await fetch(`${baseUrl}/api/manifestations/generate-seeds`, {
+      const manifestResponse = await fetch(`${baseUrl}/api/manifestations/generate-seeds`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -86,6 +86,13 @@ export async function POST(request: NextRequest) {
           }
         })
       })
+
+      if (!manifestResponse.ok) {
+        const errorText = await manifestResponse.text()
+        console.error('Failed to generate seed manifestations:', manifestResponse.status, errorText)
+      } else {
+        console.log('Successfully generated seed manifestations')
+      }
     } catch (error) {
       console.error('Error generating seed manifestations:', error)
       // Don't fail the onboarding if this fails
