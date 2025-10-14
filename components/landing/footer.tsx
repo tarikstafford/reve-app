@@ -5,8 +5,10 @@ import Link from 'next/link'
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 py-16 px-4">
-      <div className="max-w-7xl mx-auto">
+    <footer className="relative bg-black text-gray-300 py-16 px-4 border-t border-purple-900/30">
+      <div className="absolute inset-0 bg-gradient-to-t from-purple-950/20 to-transparent pointer-events-none" />
+
+      <div className="relative max-w-7xl mx-auto">
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
@@ -14,8 +16,8 @@ export function Footer() {
               <span className="text-2xl font-light text-white">Rêve</span>
             </div>
             <p className="text-gray-400 leading-relaxed mb-6">
-              Transform your dreams into insights and your aspirations into reality with AI-powered
-              dream interpretation and science-backed manifestation practices.
+              Cross the bridge between the life you&apos;re living and the universe you&apos;re meant to create.
+              Your transformation begins tonight.
             </p>
             <p className="text-sm text-gray-500">
               Built with evidence-based practices from Stanford, Harvard, UCLA, and the American
