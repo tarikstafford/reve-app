@@ -61,9 +61,9 @@ A beautiful, ethereal progressive web application for dream journaling, AI-power
    - Copy and run the contents of `lib/db/schema.sql`
    - Run `lib/db/add_video_url_to_dreams.sql` to add video support
    - Run `lib/db/add_media_status_and_queue.sql` to add async queue system
-3. Create storage buckets with public access:
-   - `selfies` - For user-uploaded selfies during onboarding
-   - `media` - For AI-generated dream/manifestation images and videos
+3. **Create storage buckets** (see [STORAGE_SETUP.md](./STORAGE_SETUP.md) for detailed instructions):
+   - `selfies` - For user-uploaded selfies during onboarding (public bucket)
+   - `media` - For AI-generated dream/manifestation images and videos (public bucket, 100MB limit)
 4. Get your project URL and keys from Settings > API
 5. **Set up Google OAuth** (see [AUTHENTICATION_SETUP.md](./AUTHENTICATION_SETUP.md) for detailed instructions):
    - Enable Google provider in Supabase Authentication settings
