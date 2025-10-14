@@ -32,7 +32,7 @@ export async function downloadAndUploadToStorage(
     // Upload to Supabase Storage using service role (bypasses RLS)
     const supabase = createServiceClient()
 
-    const { error } = supabase.storage
+    const { error } = await supabase.storage
       .from(STORAGE_BUCKET)
       .upload(destinationPath, buffer, {
         contentType: blob.type,
