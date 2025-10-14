@@ -43,7 +43,9 @@ export async function downloadAndUploadToStorage(
       throw new Error(`Failed to upload to Supabase Storage: ${error.message}`)
     }
 
-    // Get public URL
+    // Get URL (works for both public and private buckets)
+    // For public buckets: returns permanent public URL
+    // For private buckets: will need to create signed URLs on access
     const { data: { publicUrl } } = supabase.storage
       .from(STORAGE_BUCKET)
       .getPublicUrl(destinationPath)

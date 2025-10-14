@@ -8,6 +8,22 @@ Rêve uses Supabase Storage for two purposes:
 1. **User-uploaded content** - Selfies during onboarding
 2. **AI-generated media** - Dream/manifestation images and videos
 
+## Public vs Private Buckets
+
+You have two options:
+
+### Option 1: Public Buckets (Simpler, Recommended for MVP)
+- ✅ **Pros**: Simpler setup, URLs work immediately, no signed URL generation needed
+- ⚠️ **Cons**: Anyone with the URL can access files (security through obscurity)
+- **Best for**: Development, MVP, when URLs aren't guessable
+
+### Option 2: Private Buckets with RLS (More Secure)
+- ✅ **Pros**: True access control, users can only access their own files
+- ⚠️ **Cons**: More complex setup, requires RLS policies
+- **Best for**: Production, when handling sensitive user data
+
+**This guide shows Option 1 (public buckets) for simplicity. See "Private Bucket Setup" section for Option 2.**
+
 ## Step-by-Step Instructions
 
 ### 1. Navigate to Storage
@@ -149,12 +165,79 @@ media/
   2. Verify MIME type is `video/mp4`
   3. Ensure public access is enabled
 
+## Private Bucket Setup (Alternative)
+
+If you prefer private buckets with proper access control:
+
+### 1. Create Buckets as Private
+
+- Create both `selfies` and `media` buckets
+- ❌ **Do NOT** check "Public bucket"
+
+### 2. Add RLS Policies
+
+For the `media` bucket:
+
+```sql
+-- Allow authenticated users to read their own media
+CREATE POLICY "Users can read their own media"
+ON storage.objects FOR SELECT
+TO authenticated
+USING (
+  bucket_id = 'media' AND
+  (storage.foldername(name))[1] = 'dreams' AND
+  (storage.foldername(name))[2] = auth.uid()::text
+  OR
+  (storage.foldername(name))[1] = 'manifestations' AND
+  (storage.foldername(name))[2] = auth.uid()::text
+  OR
+  (storage.foldername(name))[1] = 'profiles' AND
+  (storage.foldername(name))[2] = auth.uid()::text
+);
+
+-- Allow service role to upload media
+CREATE POLICY "Service role can upload media"
+ON storage.objects FOR INSERT
+TO service_role
+WITH CHECK (bucket_id = 'media');
+
+-- Allow service role to update media
+CREATE POLICY "Service role can update media"
+ON storage.objects FOR UPDATE
+TO service_role
+USING (bucket_id = 'media');
+```
+
+### 3. Frontend Access with Private Buckets
+
+The current code uses `getPublicUrl()` which works for both public and private buckets:
+- **Public buckets**: Returns a permanent public URL
+- **Private buckets**: Returns a URL that requires authentication
+
+For private buckets, the frontend will automatically use the user's session to access files since we're using the authenticated Supabase client.
+
+**No code changes needed!** The app will work with both public and private buckets.
+
 ## Security Notes
 
-- **Public buckets**: Required for displaying media to users without authentication
-- **RLS policies**: Add policies to prevent unauthorized uploads while allowing public reads
+### Public Buckets
+- **Pros**: Simpler setup, no auth needed for media display
+- **Cons**: Anyone with URL can access files (but URLs contain UUIDs making them hard to guess)
+- **Risk**: Low for dream images/videos (not sensitive personal data)
+
+### Private Buckets
+- **Pros**: Proper access control, users can only see their own files
+- **Cons**: Slightly more complex, requires session management
+- **Benefit**: Better for user privacy and regulatory compliance
+
+**Recommendation**:
+- **Development/MVP**: Use public buckets for simplicity
+- **Production**: Consider private buckets if handling sensitive data or for regulatory compliance
+
+### Other Security Measures
 - **Service role**: Backend uses service role key to bypass RLS for uploads
 - **User isolation**: Files are organized by user ID to maintain data separation
+- **UUID paths**: Dream/manifestation IDs are UUIDs, making URLs unguessable
 
 ## Next Steps
 
