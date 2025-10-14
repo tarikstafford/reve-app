@@ -1,6 +1,11 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
+/**
+ * Create authenticated Supabase client (respects RLS)
+ * Use for user-facing operations
+ */
 export async function createClient() {
   const cookieStore = await cookies()
 
@@ -29,6 +34,27 @@ export async function createClient() {
           }
         },
       },
+    }
+  )
+}
+
+/**
+ * Create service role Supabase client (bypasses RLS)
+ * Use for backend operations like media uploads
+ */
+export function createServiceClient() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Missing Supabase service role environment variables. Please add NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to your environment.')
+  }
+
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
     }
   )
 }

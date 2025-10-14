@@ -3,7 +3,7 @@
  * Downloads media from external URLs and uploads to Supabase Storage
  */
 
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 const STORAGE_BUCKET = 'media'
 
@@ -29,10 +29,10 @@ export async function downloadAndUploadToStorage(
     const arrayBuffer = await blob.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Upload to Supabase Storage
-    const supabase = await createClient()
+    // Upload to Supabase Storage using service role (bypasses RLS)
+    const supabase = createServiceClient()
 
-    const { error } = await supabase.storage
+    const { error } = supabase.storage
       .from(STORAGE_BUCKET)
       .upload(destinationPath, buffer, {
         contentType: blob.type,
