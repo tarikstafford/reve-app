@@ -104,9 +104,18 @@ export async function generateImage(
         throw new Error(`Failed to check image task status: ${statusData.msg}`)
       }
 
-      if ((statusData.data.status === 'completed' || statusData.data.status === 'success') && statusData.data.imageUrl) {
-        console.log(`Image generation complete: ${statusData.data.imageUrl}`)
-        return statusData.data.imageUrl
+      // Check if task is complete
+      if (statusData.data.status === 'completed' || statusData.data.status === 'success') {
+        // Try different possible field names for the image URL
+        const imageUrl = statusData.data.imageUrl || (statusData.data as any).image_url || (statusData.data as any).url
+
+        if (imageUrl) {
+          console.log(`Image generation complete: ${imageUrl}`)
+          return imageUrl
+        } else {
+          console.warn('Task marked as complete but no image URL found. Full response:', JSON.stringify(statusData, null, 2))
+          // Continue polling in case URL comes in next response
+        }
       }
 
       if (statusData.data.status === 'failed') {
@@ -196,9 +205,18 @@ export async function generateVideoFromImage(
         throw new Error(`Failed to check video task status: ${statusData.msg}`)
       }
 
-      if ((statusData.data.status === 'completed' || statusData.data.status === 'success') && statusData.data.videoUrl) {
-        console.log(`Video generation complete: ${statusData.data.videoUrl}`)
-        return statusData.data.videoUrl
+      // Check if task is complete
+      if (statusData.data.status === 'completed' || statusData.data.status === 'success') {
+        // Try different possible field names for the video URL
+        const videoUrl = statusData.data.videoUrl || (statusData.data as any).video_url || (statusData.data as any).url
+
+        if (videoUrl) {
+          console.log(`Video generation complete: ${videoUrl}`)
+          return videoUrl
+        } else {
+          console.warn('Task marked as complete but no video URL found. Full response:', JSON.stringify(statusData, null, 2))
+          // Continue polling in case URL comes in next response
+        }
       }
 
       if (statusData.data.status === 'failed') {
