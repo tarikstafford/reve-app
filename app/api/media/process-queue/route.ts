@@ -19,9 +19,29 @@ import {
  * 4. Downloads and uploads to Supabase Storage
  * 5. Updates entity with media URLs
  */
+
+// GET handler for Vercel Cron
+export async function GET(request: NextRequest) {
+  return processQueue()
+}
+
+// POST handler for manual triggers
 export async function POST(request: NextRequest) {
+  return processQueue()
+}
+
+async function processQueue() {
   try {
     const supabase = await createClient()
+
+    // First, reset stuck "processing" tasks (been processing for >10 minutes)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+    await supabase
+      .from('media_generation_queue')
+      .update({ status: 'pending' })
+      .eq('status', 'processing')
+      .lt('updated_at', tenMinutesAgo)
+      .lt('attempts', 3)
 
     // Get next pending task (FIFO)
     const { data: tasks, error: fetchError } = await supabase
