@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { generateImage, generateVideoFromImage } from '@/lib/kie-ai/client'
 import {
   downloadAndUploadToStorage,
@@ -32,7 +32,7 @@ export async function POST() {
 
 async function processQueue() {
   try {
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     // First, reset stuck "processing" tasks (been processing for >10 minutes)
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
