@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import OpenAI from 'openai'
 
 const getOpenAI = () => new OpenAI({
@@ -9,7 +9,19 @@ const getOpenAI = () => new OpenAI({
 export async function POST(request: NextRequest) {
   try {
     const { userId, profile } = await request.json()
-    const supabase = await createClient()
+
+    // Use service role key for internal API calls
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     const openai = getOpenAI()
 
     const manifestations = []
