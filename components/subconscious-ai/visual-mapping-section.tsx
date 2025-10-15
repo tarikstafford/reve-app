@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Image, Video, Waveform, Palette } from 'lucide-react'
+import { Image, Video, Waves, Palette } from 'lucide-react'
 
 export function VisualMappingSection() {
   const features = [
@@ -16,7 +16,7 @@ export function VisualMappingSection() {
       description: "Dreams aren't static—they flow and transform. Our AI generates video sequences that bring your dreams to life, creating moving visualizations that mirror the fluid nature of subconscious processing."
     },
     {
-      icon: Waveform,
+      icon: Waves,
       title: "Voice-to-Dream Pipeline",
       description: "Speak your dreams naturally using Whisper AI transcription. Your voice carries emotional data—tone, pace, pauses—that our systems preserve and analyze, capturing nuances that text alone cannot convey."
     },
