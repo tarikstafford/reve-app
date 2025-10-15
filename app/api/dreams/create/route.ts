@@ -126,20 +126,37 @@ Respond in JSON format:
     // Generate analyses from Jung and Freud
     const serviceSupabase = createServiceClient()
 
+    // Get fine-tuned model IDs from environment (if available)
+    const fineTunedModels: Record<string, string> = {
+      jung: process.env.OPENAI_JUNG_MODEL || '',
+      freud: process.env.OPENAI_FREUD_MODEL || ''
+    }
+
     for (const [analystId, systemPrompt] of Object.entries(ANALYST_PROMPTS)) {
       try {
+        // Use fine-tuned model if available, otherwise use gpt-4o with system prompt
+        const useFineTunedModel = fineTunedModels[analystId]
+
         const analysisResponse = await openai.chat.completions.create({
-          model: 'gpt-4o',
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt
-            },
-            {
-              role: 'user',
-              content: `Analyze this dream:\n\nTitle: ${title || 'Untitled'}\n\nDream: ${content}\n\nProvide a detailed analysis (3-4 paragraphs) in your characteristic style and theoretical framework.`
-            }
-          ],
+          model: useFineTunedModel || 'gpt-4o',
+          messages: useFineTunedModel
+            ? [
+                // Fine-tuned models don't need system prompts - they're baked in
+                {
+                  role: 'user',
+                  content: `Analyze this dream:\n\nTitle: ${title || 'Untitled'}\n\nDream: ${content}\n\nProvide a detailed analysis (3-4 paragraphs) in your characteristic style and theoretical framework.`
+                }
+              ]
+            : [
+                {
+                  role: 'system',
+                  content: systemPrompt
+                },
+                {
+                  role: 'user',
+                  content: `Analyze this dream:\n\nTitle: ${title || 'Untitled'}\n\nDream: ${content}\n\nProvide a detailed analysis (3-4 paragraphs) in your characteristic style and theoretical framework.`
+                }
+              ],
           temperature: 0.8,
           max_tokens: 800
         })
