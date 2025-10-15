@@ -208,10 +208,22 @@ export function ManifestationDetailDialog({
               </div>
             </div>
 
-            <div className="bg-purple-50 rounded-2xl p-8">
+            <div className="bg-purple-50 rounded-2xl p-8 space-y-4">
               <p className="text-lg text-gray-800 leading-relaxed text-center italic">
                 {manifestation.narrative}
               </p>
+              {manifestation.tags && manifestation.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 justify-center pt-2">
+                  {manifestation.tags.map((tag, i) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1 bg-purple-200 text-purple-800 rounded-full text-xs font-medium"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="text-center text-sm text-gray-500">

@@ -30,28 +30,40 @@ export async function POST(request: NextRequest) {
     for (let i = 0; i < 3; i++) {
       const theme = i === 0 ? 'confidence' : i === 1 ? 'growth' : 'peace'
 
-      // Generate narrative
-      const narrativePrompt = `Create a short, powerful manifestation narrative (3-4 sentences) for ${profile.name} focused on ${theme}. They love their ${profile.qualityLoved} and are developing ${profile.qualityDesired}, inspired by ${profile.idol}.
+      // Generate narrative with title and tags
+      const manifestationPrompt = `Create a manifestation for ${profile.name} focused on ${theme}. They love their ${profile.qualityLoved} and are developing ${profile.qualityDesired}, inspired by ${profile.idol}.
 
-Write in second person ("You are..."). Make it dreamlike, empowering, and suitable for daily repetition. This will be read aloud as a positive affirmation.`
+Return a JSON object with:
+- title: A short, inspiring title (3-5 words)
+- narrative: A powerful manifestation narrative (3-4 sentences) in second person ("You are..."). Make it dreamlike, empowering, and suitable for daily repetition
+- tags: An array of 3-5 relevant tags (e.g., "confidence", "self-love", "transformation", "peace", "strength", "clarity", "abundance", "joy")
 
-      const narrativeResponse = await openai.chat.completions.create({
+Example format:
+{
+  "title": "Radiant Self-Confidence",
+  "narrative": "You are standing in your power, radiating confidence with every breath...",
+  "tags": ["confidence", "self-love", "empowerment"]
+}`
+
+      const manifestationResponse = await openai.chat.completions.create({
         model: 'gpt-4o',
         messages: [
           {
             role: 'system',
-            content: 'You are a master of positive psychology and manifestation practices. Write empowering, dreamlike affirmations.'
+            content: 'You are a master of positive psychology and manifestation practices. Write empowering, dreamlike affirmations. Always respond with valid JSON only.'
           },
           {
             role: 'user',
-            content: narrativePrompt
+            content: manifestationPrompt
           }
         ],
         temperature: 0.8,
-        max_tokens: 150
+        max_tokens: 250,
+        response_format: { type: 'json_object' }
       })
 
-      const narrative = narrativeResponse.choices[0].message.content
+      const manifestationData = JSON.parse(manifestationResponse.choices[0].message.content || '{}')
+      const { title, narrative, tags } = manifestationData
 
       // Generate audio using ElevenLabs (placeholder for now)
       // In production, you would call ElevenLabs API here
@@ -62,8 +74,9 @@ Write in second person ("You are..."). Make it dreamlike, empowering, and suitab
         .from('manifestations')
         .insert({
           user_id: userId,
-          title: `${theme.charAt(0).toUpperCase() + theme.slice(1)} Manifestation`,
+          title: title || `${theme.charAt(0).toUpperCase() + theme.slice(1)} Manifestation`,
           narrative: narrative,
+          tags: tags || [theme],
           media_status: 'pending',
           audio_url: audioUrl,
           is_seed: true

@@ -141,11 +141,23 @@ export function ManifestationLibrary() {
                       </div>
                     </div>
                   )}
-                  <CardContent className="p-4">
-                    <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                  <CardContent className="p-4 space-y-3">
+                    <p className="text-gray-600 text-sm line-clamp-3">
                       {manifestation.narrative}
                     </p>
-                    <div className="flex items-center justify-between">
+                    {manifestation.tags && manifestation.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {manifestation.tags.slice(0, 4).map((tag, i) => (
+                          <span
+                            key={i}
+                            className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between pt-2">
                       <div className="flex items-center gap-1 text-sm text-gray-500">
                         <Volume2 className="w-4 h-4" />
                         Played {manifestation.play_count} times

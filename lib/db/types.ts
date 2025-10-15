@@ -44,6 +44,7 @@ export interface Manifestation {
   video_url: string | null
   audio_url: string | null
   media_status: 'pending' | 'processing' | 'completed' | 'failed'
+  tags: string[]
   is_seed: boolean
   play_count: number
   created_at: string
