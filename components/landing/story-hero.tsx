@@ -2,13 +2,44 @@
 
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Sparkles, ArrowRight, LogIn } from 'lucide-react'
+import { Sparkles, ArrowRight, LogIn, User } from 'lucide-react'
 import Link from 'next/link'
 import { signInWithGoogle } from '@/lib/auth/auth-helpers'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export function StoryHero() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      setIsLoggedIn(!!user)
+    }
+    checkAuth()
+  }, [])
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20">
+      {/* Top Bar with Profile Icon */}
+      {isLoggedIn && (
+        <div className="absolute top-0 left-0 right-0 z-20 p-6">
+          <div className="max-w-7xl mx-auto flex justify-end">
+            <Link href="/dashboard">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full bg-white/10 backdrop-blur text-white hover:bg-white/20 border border-white/20"
+              >
+                <User className="w-5 h-5 mr-2" />
+                Dashboard
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Animated background with cosmic theme */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-900" />
