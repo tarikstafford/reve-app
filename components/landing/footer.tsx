@@ -39,6 +39,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/subconscious-ai" className="text-gray-400 hover:text-purple-400 transition-colors">
+                  Subconscious AI
+                </Link>
+              </li>
+              <li>
                 <Link href="/landing" className="text-gray-400 hover:text-purple-400 transition-colors">
                   Pricing
                 </Link>
