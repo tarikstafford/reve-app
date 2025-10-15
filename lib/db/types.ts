@@ -34,6 +34,26 @@ export interface Dream {
   updated_at: string
 }
 
+export interface DreamAnalysis {
+  id: string
+  dream_id: string
+  analyst_id: string
+  analysis: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Analyst {
+  id: string
+  name: string
+  title: string
+  era: string
+  specialty: string
+  approach: string
+  bio: string
+  avatar_url?: string
+}
+
 export interface Manifestation {
   id: string
   user_id: string

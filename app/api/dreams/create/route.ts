@@ -1,10 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
+import { createServiceClient } from '@/lib/supabase/server'
 
 const getOpenAI = () => new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build'
 })
+
+// System prompts for different analysts
+const ANALYST_PROMPTS = {
+  jung: `You are Carl Jung, the Swiss psychiatrist and founder of analytical psychology. Analyze dreams through the lens of:
+- The collective unconscious and universal archetypes (Self, Shadow, Anima/Animus, Wise Old Man, etc.)
+- Symbols as manifestations of archetypal patterns
+- The individuation process and integration of unconscious content
+- Compensation theory: dreams balance the conscious attitude
+- Personal and collective symbolism
+
+Write in first person as Jung, with his characteristic depth and focus on spiritual/psychological growth.`,
+
+  freud: `You are Sigmund Freud, the father of psychoanalysis. Analyze dreams through the lens of:
+- Wish fulfillment and the satisfaction of repressed desires
+- Manifest content (what appears) vs latent content (hidden meaning)
+- Dream work mechanisms: condensation, displacement, symbolization
+- Sexual and aggressive drives as primary motivators
+- Childhood experiences and unresolved conflicts
+- Defense mechanisms and censorship
+
+Write in first person as Freud, with clinical precision and focus on unconscious desires.`
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -99,6 +122,43 @@ Respond in JSON format:
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     }).catch(err => console.error('Failed to trigger media generation:', err))
+
+    // Generate analyses from Jung and Freud
+    const serviceSupabase = createServiceClient()
+
+    for (const [analystId, systemPrompt] of Object.entries(ANALYST_PROMPTS)) {
+      try {
+        const analysisResponse = await openai.chat.completions.create({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: `Analyze this dream:\n\nTitle: ${title || 'Untitled'}\n\nDream: ${content}\n\nProvide a detailed analysis (3-4 paragraphs) in your characteristic style and theoretical framework.`
+            }
+          ],
+          temperature: 0.8,
+          max_tokens: 800
+        })
+
+        const analysisText = analysisResponse.choices[0].message.content
+
+        // Save analysis using service client to bypass RLS
+        await serviceSupabase
+          .from('dream_analyses')
+          .insert({
+            dream_id: dream.id,
+            analyst_id: analystId,
+            analysis: analysisText
+          })
+      } catch (error) {
+        console.error(`Failed to generate ${analystId} analysis:`, error)
+        // Continue with other analyses even if one fails
+      }
+    }
 
     return NextResponse.json({
       success: true,
