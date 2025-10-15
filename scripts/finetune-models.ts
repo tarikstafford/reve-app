@@ -28,12 +28,12 @@ interface FineTuneJob {
   fine_tuned_model: string | null
 }
 
-async function uploadTrainingFile(filePath: string, purpose: string = 'fine-tune'): Promise<string> {
+async function uploadTrainingFile(filePath: string): Promise<string> {
   console.log(`📤 Uploading training file: ${filePath}`)
 
   const file = await openai.files.create({
     file: fs.createReadStream(filePath),
-    purpose: purpose
+    purpose: 'fine-tune'
   })
 
   console.log(`✅ File uploaded successfully. File ID: ${file.id}`)
