@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Manifestation } from '@/lib/db/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Volume2, Sparkles } from 'lucide-react'
+import { Play, Volume2, Sparkles, RefreshCw } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ManifestationDetailDialog } from './manifestation-detail-dialog'
 
@@ -12,6 +12,7 @@ export function ManifestationLibrary() {
   const [manifestations, setManifestations] = useState<Manifestation[]>([])
   const [selectedManifestation, setSelectedManifestation] = useState<Manifestation | null>(null)
   const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
     loadManifestations()
@@ -36,6 +37,30 @@ export function ManifestationLibrary() {
     setSelectedManifestation(manifestation)
   }
 
+  const handleGenerateSeeds = async () => {
+    try {
+      setGenerating(true)
+      const response = await fetch('/api/manifestations/generate-seeds-for-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate manifestations')
+      }
+
+      // Reload manifestations after generation
+      await loadManifestations()
+    } catch (error) {
+      console.error('Error generating seed manifestations:', error)
+      alert('Failed to generate manifestations. Please try again.')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {loading ? (
@@ -49,10 +74,29 @@ export function ManifestationLibrary() {
         </div>
       ) : manifestations.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-gray-500 text-lg">No manifestations yet</p>
-          <p className="text-gray-400 text-sm mt-2">
-            Your first manifestations will be created after onboarding
+          <Sparkles className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+          <p className="text-gray-500 text-lg mb-2">No manifestations yet</p>
+          <p className="text-gray-400 text-sm mb-6">
+            Generate your personalized seed manifestations to begin your journey
           </p>
+          <Button
+            onClick={handleGenerateSeeds}
+            disabled={generating}
+            size="lg"
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+          >
+            {generating ? (
+              <>
+                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5 mr-2" />
+                Generate Seed Manifestations
+              </>
+            )}
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
