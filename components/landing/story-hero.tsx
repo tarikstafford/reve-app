@@ -22,10 +22,10 @@ export function StoryHero() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-20">
-      {/* Top Bar with Profile Icon */}
-      {isLoggedIn && (
-        <div className="absolute top-0 left-0 right-0 z-20 p-6">
-          <div className="max-w-7xl mx-auto flex justify-end">
+      {/* Top Bar with Sign In or Dashboard */}
+      <div className="absolute top-0 left-0 right-0 z-20 p-6">
+        <div className="max-w-7xl mx-auto flex justify-end">
+          {isLoggedIn ? (
             <Link href="/dashboard">
               <Button
                 variant="ghost"
@@ -36,9 +36,19 @@ export function StoryHero() {
                 Dashboard
               </Button>
             </Link>
-          </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full bg-white/10 backdrop-blur text-white hover:bg-white/20 border border-white/20"
+              onClick={signInWithGoogle}
+            >
+              <LogIn className="w-5 h-5 mr-2" />
+              Sign In
+            </Button>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Animated background with cosmic theme */}
       <div className="absolute inset-0 overflow-hidden">
@@ -121,7 +131,6 @@ export function StoryHero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.8 }}
-          className="flex flex-col sm:flex-row gap-6 justify-center"
         >
           <Link href="/onboarding">
             <Button
@@ -132,15 +141,6 @@ export function StoryHero() {
               <ArrowRight className="w-6 h-6 ml-2 group-hover:translate-x-2 transition-transform" />
             </Button>
           </Link>
-          <Button
-            size="lg"
-            variant="outline"
-            className="px-12 py-8 text-xl rounded-full border-2 border-white/30 bg-white/5 hover:bg-white/20 text-white group backdrop-blur"
-            onClick={signInWithGoogle}
-          >
-            <LogIn className="w-6 h-6 mr-2 group-hover:scale-110 transition-transform" />
-            Sign In
-          </Button>
         </motion.div>
 
         {/* Scroll indicator */}
