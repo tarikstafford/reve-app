@@ -46,8 +46,8 @@ export function FutureApplicationsSection() {
             </span>
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            We're building the first infrastructure for subconscious-aware AI systems.
-            The next generation of tools won't just respond to what you consciously request—they'll
+            We&apos;re building the first infrastructure for subconscious-aware AI systems.
+            The next generation of tools won&apos;t just respond to what you consciously request—they&apos;ll
             understand what your deeper self actually needs.
           </p>
         </motion.div>
@@ -73,8 +73,8 @@ export function FutureApplicationsSection() {
                   They model the surface of human behavior. But consciousness is just the tip of the iceberg.
                 </p>
                 <p className="text-xl text-gray-300 leading-relaxed">
-                  We're creating AI trained on subconscious data—dreams, symbolic patterns, emotional undercurrents,
-                  archetypal resonances. This isn't just better personalization. It's a fundamentally different class
+                  We&apos;re creating AI trained on subconscious data—dreams, symbolic patterns, emotional undercurrents,
+                  archetypal resonances. This isn&apos;t just better personalization. It&apos;s a fundamentally different class
                   of intelligence: AI that sees the 90% of you that lives below the waterline.
                 </p>
               </div>
@@ -169,13 +169,13 @@ export function FutureApplicationsSection() {
               Beyond Personalization: Human Augmentation
             </h3>
             <p className="text-xl text-gray-200 max-w-4xl mx-auto leading-relaxed mb-6">
-              The endgame isn't just better recommendations or smarter assistants. It's AI that helps you
+              The endgame isn&apos;t just better recommendations or smarter assistants. It&apos;s AI that helps you
               become more fully yourself—integrating the fragmented parts of your psyche, illuminating
               blind spots, facilitating the individuation process that Jung described.
             </p>
             <p className="text-lg text-gray-300 max-w-4xl mx-auto leading-relaxed">
               Imagine an AI copilot that knows your Shadow, recognizes your archetypal patterns, and can
-              guide you toward psychological integration. That's not science fiction. It's the logical
+              guide you toward psychological integration. That&apos;s not science fiction. It&apos;s the logical
               conclusion of training AI on the complete dataset of human consciousness—both conscious and
               subconscious dimensions.
             </p>
@@ -192,7 +192,7 @@ export function FutureApplicationsSection() {
         >
           <p className="text-lg text-gray-200 max-w-4xl mx-auto leading-relaxed">
             <span className="text-purple-300 font-medium">Built on Privacy:</span> All subconscious data
-            remains private to you. We're not building a panopticon—we're building a mirror. Your dreams,
+            remains private to you. We&apos;re not building a panopticon—we&apos;re building a mirror. Your dreams,
             patterns, and insights power AI that serves only you, never training on or sharing your
             deepest psychological data. This is human augmentation, not surveillance capitalism.
           </p>

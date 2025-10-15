@@ -24,7 +24,7 @@ export function AIChatSection() {
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             After logging 10 dreams, unlock AI-powered dialogue with your own subconscious mind.
-            This isn't a chatbot—it's a mirror that reflects patterns you haven't noticed.
+            This isn&apos;t a chatbot—it&apos;s a mirror that reflects patterns you haven&apos;t noticed.
           </p>
         </motion.div>
 
@@ -46,7 +46,7 @@ export function AIChatSection() {
                 <h3 className="text-3xl font-light text-white mb-4">Conversational Depth</h3>
                 <p className="text-xl text-gray-300 leading-relaxed">
                   Ask questions. Explore recurring symbols. Investigate emotional patterns. The AI has analyzed
-                  every dream you've logged, every manifestation you've created, every theme and emotion you've
+                  every dream you&apos;ve logged, every manifestation you&apos;ve created, every theme and emotion you&apos;ve
                   experienced. It sees the connections your conscious mind misses.
                 </p>
               </div>
@@ -58,15 +58,15 @@ export function AIChatSection() {
                 <ul className="space-y-2 text-gray-400 text-sm">
                   <li className="flex items-start gap-2">
                     <Sparkles className="w-4 h-4 text-pink-400 flex-shrink-0 mt-0.5" />
-                    <span>"Why do I keep dreaming about water when I'm stressed?"</span>
+                    <span>&quot;Why do I keep dreaming about water when I&apos;m stressed?&quot;</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Sparkles className="w-4 h-4 text-pink-400 flex-shrink-0 mt-0.5" />
-                    <span>"What patterns appear in my dreams before major decisions?"</span>
+                    <span>&quot;What patterns appear in my dreams before major decisions?&quot;</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Sparkles className="w-4 h-4 text-pink-400 flex-shrink-0 mt-0.5" />
-                    <span>"How have my subconscious themes evolved over time?"</span>
+                    <span>&quot;How have my subconscious themes evolved over time?&quot;</span>
                   </li>
                 </ul>
               </div>
@@ -76,7 +76,7 @@ export function AIChatSection() {
                 <ul className="space-y-2 text-gray-400 text-sm">
                   <li className="flex items-start gap-2">
                     <Sparkles className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
-                    <span>Every dream you've logged and their interpretations</span>
+                    <span>Every dream you&apos;ve logged and their interpretations</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Sparkles className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
@@ -152,7 +152,7 @@ export function AIChatSection() {
               </div>
               <h3 className="text-2xl font-medium text-white mb-4">Context Integration</h3>
               <p className="text-gray-400 leading-relaxed">
-                Your subconscious doesn't exist in isolation. The AI connects dream content with your
+                Your subconscious doesn&apos;t exist in isolation. The AI connects dream content with your
                 manifestations, creating a holistic understanding of your psyche.
               </p>
             </div>

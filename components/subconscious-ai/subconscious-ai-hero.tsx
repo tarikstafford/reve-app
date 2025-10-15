@@ -88,9 +88,9 @@ export function SubconsciousAIHero() {
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-200 max-w-4xl mx-auto leading-relaxed">
-            We've built something unprecedented: AI systems trained on the language of dreams,
+            We&apos;ve built something unprecedented: AI systems trained on the language of dreams,
             fine-tuned on the theories of Jung and Freud, capable of mapping the patterns your
-            conscious mind can't see. This is the bridge between human intuition and machine intelligence.
+            conscious mind can&apos;t see. This is the bridge between human intuition and machine intelligence.
           </p>
         </motion.div>
 

@@ -23,8 +23,8 @@ export function FineTunedModelsSection() {
             </span>
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            We don't just prompt AI with instructions—we train specialized models on the complete
-            theoretical frameworks of history's greatest dream analysts.
+            We don&apos;t just prompt AI with instructions—we train specialized models on the complete
+            theoretical frameworks of history&apos;s greatest dream analysts.
           </p>
         </motion.div>
 
@@ -52,7 +52,7 @@ export function FineTunedModelsSection() {
               <div className="space-y-4 text-gray-300">
                 <p className="leading-relaxed">
                   Our Jung model is trained on the complete theoretical corpus: collective unconscious, archetypes,
-                  Shadow work, Anima/Animus, individuation processes. It doesn't simulate Jung—it thinks like him.
+                  Shadow work, Anima/Animus, individuation processes. It doesn&apos;t simulate Jung—it thinks like him.
                 </p>
                 <div className="bg-purple-900/20 border border-purple-500/20 rounded-xl p-4">
                   <p className="text-sm text-purple-200">
@@ -116,7 +116,7 @@ export function FineTunedModelsSection() {
               <h3 className="text-3xl font-light text-white mb-4">The Technical Edge</h3>
               <p className="text-xl text-gray-300 leading-relaxed mb-6">
                 Fine-tuning creates models that have deeply internalized these theoretical frameworks.
-                They don't reference theory—they embody it. Every analysis emerges from authentic
+                They don&apos;t reference theory—they embody it. Every analysis emerges from authentic
                 theoretical foundations, not surface-level pattern matching.
               </p>
             </div>
