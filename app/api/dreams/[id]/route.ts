@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -18,7 +18,7 @@ export async function DELETE(
       )
     }
 
-    const dreamId = params.id
+    const { id: dreamId } = await params
 
     // First, verify the dream belongs to the user
     const { data: dream, error: fetchError } = await supabase
