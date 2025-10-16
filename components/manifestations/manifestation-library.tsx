@@ -106,7 +106,7 @@ export function ManifestationLibrary() {
                         <h4 className="font-semibold">1. Timing is Key</h4>
                       </div>
                       <p className="text-sm text-gray-600">
-                        Play your manifestation story as you're falling asleep. This is when your brain enters the theta state, making your subconscious most receptive to new patterns.
+                        Play your manifestation story as you&apos;re falling asleep. This is when your brain enters the theta state, making your subconscious most receptive to new patterns.
                       </p>
                     </div>
 
@@ -126,7 +126,7 @@ export function ManifestationLibrary() {
                         <h4 className="font-semibold">3. Rehearse & Rewire</h4>
                       </div>
                       <p className="text-sm text-gray-600">
-                        By repeatedly hearing your ideal narrative in this state, you're rehearsing a new reality. Your brain can't distinguish imagination from experience—it rewires accordingly.
+                        By repeatedly hearing your ideal narrative in this state, you&apos;re rehearsing a new reality. Your brain can&apos;t distinguish imagination from experience—it rewires accordingly.
                       </p>
                     </div>
                   </div>
@@ -136,7 +136,7 @@ export function ManifestationLibrary() {
                     <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
                       <li>Use headphones or speakers at a comfortable volume</li>
                       <li>Practice consistently—nightly repetition builds neural pathways</li>
-                      <li>Don't force it; let the story wash over you as you drift</li>
+                      <li>Don&apos;t force it; let the story wash over you as you drift</li>
                       <li>Trust the process; changes happen beneath conscious awareness</li>
                     </ul>
                   </div>
