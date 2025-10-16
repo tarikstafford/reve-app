@@ -90,7 +90,7 @@ export function TrappedSection() {
               Their intuition whispers of possibilities, but fear keeps them frozen.
             </p>
             <p className="text-2xl text-gray-100 font-light pt-4">
-              They don't realize: <span className="text-purple-300">the key to freedom has been with them all along.</span>
+              They don&apos;t realize: <span className="text-purple-300">the key to freedom has been with them all along.</span>
             </p>
           </motion.div>
         </div>
