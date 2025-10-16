@@ -134,45 +134,39 @@ export function DreamDetailView({ dream, onBack, onDelete }: DreamDetailViewProp
             </div>
           </div>
 
-          {/* Media Section */}
-          {showMedia && (dream.video_url || dream.image_url) && (
-            <div className="space-y-6">
-              {/* Video */}
-              {dream.video_url && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="rounded-2xl overflow-hidden shadow-2xl"
-                >
-                  <video
-                    src={dream.video_url}
-                    controls
-                    autoPlay
-                    loop
-                    muted
-                    className="w-full h-auto"
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                </motion.div>
-              )}
+          {/* Video - Priority display */}
+          {showMedia && dream.video_url && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="rounded-2xl overflow-hidden shadow-2xl"
+            >
+              <video
+                src={dream.video_url}
+                controls
+                autoPlay
+                loop
+                muted
+                className="w-full h-auto"
+              >
+                Your browser does not support the video tag.
+              </video>
+            </motion.div>
+          )}
 
-              {/* Image */}
-              {dream.image_url && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className="rounded-2xl overflow-hidden shadow-2xl"
-                >
-                  <img
-                    src={dream.image_url}
-                    alt={dream.title || 'Dream visualization'}
-                    className="w-full h-auto"
-                  />
-                </motion.div>
-              )}
-            </div>
+          {/* Image - Fallback if no video */}
+          {showMedia && dream.image_url && !dream.video_url && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="rounded-2xl overflow-hidden shadow-2xl"
+            >
+              <img
+                src={dream.image_url}
+                alt={dream.title || 'Dream visualization'}
+                className="w-full h-auto"
+              />
+            </motion.div>
           )}
 
           {/* Loading state */}
