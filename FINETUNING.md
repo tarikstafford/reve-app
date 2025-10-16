@@ -58,7 +58,7 @@ For better results, consider adding more examples (10-50 recommended):
 export OPENAI_API_KEY=sk-...
 ```
 
-### Step 2: Execute the Script
+### Step 2: Create Fine-Tuning Jobs
 
 ```bash
 npx tsx scripts/finetune-models.ts
@@ -67,18 +67,58 @@ npx tsx scripts/finetune-models.ts
 The script will:
 1. Upload training files to OpenAI
 2. Create fine-tuning jobs for Jung and Freud
-3. Monitor job progress (updates every 60 seconds)
-4. Display final model IDs when complete
+3. Display job IDs and exit
 
-**Note**: Fine-tuning typically takes 20-60 minutes depending on data size.
+**Important**: The script creates the jobs and exits immediately. Fine-tuning jobs run on OpenAI's servers and can take **several days** to complete.
 
-### Step 3: Save Model IDs
+Example output:
+```
+📋 Job IDs (save these):
 
-When complete, the script outputs:
+JUNG: ftjob-abc123xyz
+FREUD: ftjob-def456uvw
+
+⏳ Next Steps:
+1. Monitor job status at: https://platform.openai.com/finetune
+2. Jobs can take several days to complete
+3. OpenAI will email you when jobs finish
+4. Once complete, run: npx tsx scripts/save-finetuned-models.ts
+```
+
+### Step 3: Monitor Progress
+
+Check job status:
+- **OpenAI Dashboard**: https://platform.openai.com/finetune
+- **Email notifications**: OpenAI sends updates when jobs complete
+- Jobs typically take 1-3 days but can be longer depending on queue
+
+### Step 4: Retrieve Model IDs
+
+Once both jobs show "succeeded" status in the dashboard, run:
+
+```bash
+npx tsx scripts/save-finetuned-models.ts <jung-job-id> <freud-job-id>
+```
+
+Example:
+```bash
+npx tsx scripts/save-finetuned-models.ts ftjob-abc123xyz ftjob-def456uvw
+```
+
+The script will output:
 
 ```
+✅ Both models fine-tuned successfully!
+
+📝 Add these to your .env file:
+
 OPENAI_JUNG_MODEL=ft:gpt-4o-2024-08-06:your-org:jung:abc123
 OPENAI_FREUD_MODEL=ft:gpt-4o-2024-08-06:your-org:freud:xyz789
+
+📦 For production (Vercel):
+1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+2. Add the two variables above
+3. Redeploy your app
 ```
 
 Add these to your `.env` file locally and to your Vercel environment variables in production.

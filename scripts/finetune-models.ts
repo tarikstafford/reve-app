@@ -1,8 +1,8 @@
 /**
  * Fine-Tuning Script for Dream Analyst Models
  *
- * This script creates fine-tuned GPT-4o models for Jung and Freud
- * using OpenAI's fine-tuning API.
+ * This script creates fine-tuning jobs for Jung and Freud models.
+ * Jobs will run on OpenAI's servers (can take several days).
  *
  * Prerequisites:
  * - OpenAI API key with fine-tuning access
@@ -11,6 +11,9 @@
  *
  * Usage:
  * npx tsx scripts/finetune-models.ts
+ *
+ * After jobs complete (check OpenAI dashboard):
+ * npx tsx scripts/save-finetuned-models.ts
  */
 
 import OpenAI from 'openai'
@@ -20,13 +23,6 @@ import path from 'path'
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
-
-interface FineTuneJob {
-  id: string
-  model: string
-  status: string
-  fine_tuned_model: string | null
-}
 
 async function uploadTrainingFile(filePath: string): Promise<string> {
   console.log(`📤 Uploading training file: ${filePath}`)
@@ -44,7 +40,7 @@ async function createFineTuneJob(
   fileId: string,
   model: string,
   suffix: string
-): Promise<string> {
+): Promise<{ jobId: string; analystName: string }> {
   console.log(`🚀 Creating fine-tune job for ${suffix}...`)
 
   const fineTune = await openai.fineTuning.jobs.create({
@@ -52,60 +48,21 @@ async function createFineTuneJob(
     model: model,
     suffix: suffix,
     hyperparameters: {
-      n_epochs: 3, // Adjust based on your data size
+      n_epochs: 3,
     }
   })
 
   console.log(`✅ Fine-tune job created. Job ID: ${fineTune.id}`)
-  return fineTune.id
+  return { jobId: fineTune.id, analystName: suffix }
 }
 
-async function checkJobStatus(jobId: string): Promise<FineTuneJob> {
-  const job = await openai.fineTuning.jobs.retrieve(jobId)
-  return {
-    id: job.id,
-    model: job.model,
-    status: job.status,
-    fine_tuned_model: job.fine_tuned_model
-  }
-}
-
-async function waitForCompletion(jobId: string): Promise<string> {
-  console.log(`⏳ Waiting for fine-tune job ${jobId} to complete...`)
-  console.log('This may take 20-60 minutes depending on data size.')
-
-  let attempts = 0
-  const maxAttempts = 120 // 2 hours with 1-minute intervals
-
-  while (attempts < maxAttempts) {
-    const status = await checkJobStatus(jobId)
-
-    console.log(`Status: ${status.status}`)
-
-    if (status.status === 'succeeded' && status.fine_tuned_model) {
-      console.log(`✅ Fine-tuning completed! Model: ${status.fine_tuned_model}`)
-      return status.fine_tuned_model
-    }
-
-    if (status.status === 'failed' || status.status === 'cancelled') {
-      throw new Error(`Fine-tuning ${status.status}: ${jobId}`)
-    }
-
-    // Wait 1 minute before checking again
-    await new Promise(resolve => setTimeout(resolve, 60000))
-    attempts++
-  }
-
-  throw new Error('Fine-tuning timed out after 2 hours')
-}
-
-async function fineTuneAnalyst(
+async function startFineTuneJob(
   analystName: string,
   trainingFile: string,
   baseModel: string = 'gpt-4o-2024-08-06'
-): Promise<string> {
+): Promise<{ jobId: string; analystName: string }> {
   console.log(`\n${'='.repeat(60)}`)
-  console.log(`🧠 Fine-tuning ${analystName} model`)
+  console.log(`🧠 Starting fine-tune job for ${analystName} model`)
   console.log('='.repeat(60))
 
   try {
@@ -113,18 +70,15 @@ async function fineTuneAnalyst(
     const fileId = await uploadTrainingFile(trainingFile)
 
     // Create fine-tune job
-    const jobId = await createFineTuneJob(
+    const jobInfo = await createFineTuneJob(
       fileId,
       baseModel,
       analystName.toLowerCase()
     )
 
-    // Wait for completion
-    const fineTunedModel = await waitForCompletion(jobId)
-
-    return fineTunedModel
+    return jobInfo
   } catch (error) {
-    console.error(`❌ Error fine-tuning ${analystName}:`, error)
+    console.error(`❌ Error starting fine-tune for ${analystName}:`, error)
     throw error
   }
 }
@@ -135,28 +89,40 @@ async function main() {
 
   const trainingDataDir = path.join(process.cwd(), 'scripts', 'training-data')
 
-  const models: Record<string, string> = {}
+  const jobs: Array<{ jobId: string; analystName: string }> = []
 
   try {
-    // Fine-tune Jung model
+    // Start Jung fine-tuning job
     const jungFile = path.join(trainingDataDir, 'jung-examples.jsonl')
-    models.jung = await fineTuneAnalyst('jung', jungFile)
+    const jungJob = await startFineTuneJob('jung', jungFile)
+    jobs.push(jungJob)
 
-    // Fine-tune Freud model
+    // Start Freud fine-tuning job
     const freudFile = path.join(trainingDataDir, 'freud-examples.jsonl')
-    models.freud = await fineTuneAnalyst('freud', freudFile)
+    const freudJob = await startFineTuneJob('freud', freudFile)
+    jobs.push(freudJob)
 
-    // Print results
+    // Print summary
     console.log('\n' + '='.repeat(60))
-    console.log('🎉 All models fine-tuned successfully!')
+    console.log('🎉 Fine-tuning jobs created successfully!')
     console.log('='.repeat(60))
-    console.log('\nAdd these to your .env file:\n')
-    console.log(`OPENAI_JUNG_MODEL=${models.jung}`)
-    console.log(`OPENAI_FREUD_MODEL=${models.freud}`)
-    console.log('\nOr update your environment variables in Vercel dashboard.')
+    console.log('\n📋 Job IDs (save these):\n')
+
+    jobs.forEach(job => {
+      console.log(`${job.analystName.toUpperCase()}: ${job.jobId}`)
+    })
+
+    console.log('\n' + '='.repeat(60))
+    console.log('⏳ Next Steps:')
+    console.log('='.repeat(60))
+    console.log('1. Monitor job status at: https://platform.openai.com/finetune')
+    console.log('2. Jobs can take several days to complete')
+    console.log('3. OpenAI will email you when jobs finish')
+    console.log('4. Once complete, run: npx tsx scripts/save-finetuned-models.ts')
+    console.log('='.repeat(60))
 
   } catch (error) {
-    console.error('\n❌ Fine-tuning failed:', error)
+    console.error('\n❌ Fine-tuning job creation failed:', error)
     process.exit(1)
   }
 }
