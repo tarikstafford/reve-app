@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Search, Calendar, Sparkles, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format } from 'date-fns'
-import { DreamDetailDialog } from './dream-detail-dialog'
+import { DreamDetailView } from './dream-detail-view'
 
 interface DreamArchiveProps {
   onRefreshRef?: React.MutableRefObject<(() => void) | null>
@@ -90,8 +90,27 @@ export function DreamArchive({ onRefreshRef }: DreamArchiveProps) {
     }
   }, [searchQuery, dreams])
 
+  // Show full-page view if a dream is selected
+  if (selectedDream) {
+    return (
+      <DreamDetailView
+        dream={selectedDream}
+        onBack={() => setSelectedDream(null)}
+        onDelete={() => {
+          loadDreams()
+          setSelectedDream(null)
+        }}
+      />
+    )
+  }
+
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-6"
+    >
       <div className="relative">
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
         <Input
@@ -193,14 +212,6 @@ export function DreamArchive({ onRefreshRef }: DreamArchiveProps) {
           </AnimatePresence>
         </div>
       )}
-
-      {selectedDream && (
-        <DreamDetailDialog
-          dream={selectedDream}
-          open={!!selectedDream}
-          onClose={() => setSelectedDream(null)}
-        />
-      )}
-    </div>
+    </motion.div>
   )
 }

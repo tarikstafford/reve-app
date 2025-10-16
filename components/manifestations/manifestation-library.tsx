@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Manifestation } from '@/lib/db/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Volume2, Sparkles, RefreshCw } from 'lucide-react'
+import { Play, Volume2, Sparkles, RefreshCw, Info, X, Brain, Moon, Waves } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ManifestationDetailDialog } from './manifestation-detail-dialog'
 
@@ -13,6 +13,7 @@ export function ManifestationLibrary() {
   const [selectedManifestation, setSelectedManifestation] = useState<Manifestation | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
 
   useEffect(() => {
     loadManifestations()
@@ -63,6 +64,101 @@ export function ManifestationLibrary() {
 
   return (
     <div className="space-y-6">
+      {/* IRT Usage Guide */}
+      <AnimatePresence>
+        {showGuide && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 rounded-full">
+                      <Brain className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-purple-900">
+                      How to Use Image Rehearsal Therapy
+                    </h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowGuide(false)}
+                    className="text-purple-600 hover:text-purple-700"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                <div className="space-y-4 text-gray-700">
+                  <p className="text-sm leading-relaxed">
+                    Image Rehearsal Therapy (IRT) is a powerful technique for manifestation that works by reprogramming your subconscious mind during the theta state—that liminal space between wakefulness and sleep.
+                  </p>
+
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-purple-700">
+                        <Moon className="w-5 h-5" />
+                        <h4 className="font-semibold">1. Timing is Key</h4>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Play your manifestation story as you're falling asleep. This is when your brain enters the theta state, making your subconscious most receptive to new patterns.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-purple-700">
+                        <Waves className="w-5 h-5" />
+                        <h4 className="font-semibold">2. Enter Theta State</h4>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        As you drift off, your brainwaves slow from beta (alert) to alpha (relaxed) to theta (drowsy). In theta, the barrier between conscious and subconscious dissolves.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-purple-700">
+                        <Sparkles className="w-5 h-5" />
+                        <h4 className="font-semibold">3. Rehearse & Rewire</h4>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        By repeatedly hearing your ideal narrative in this state, you're rehearsing a new reality. Your brain can't distinguish imagination from experience—it rewires accordingly.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/60 rounded-lg p-4 border border-purple-200">
+                    <p className="text-sm font-medium text-purple-900 mb-2">💡 Best Practices:</p>
+                    <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+                      <li>Use headphones or speakers at a comfortable volume</li>
+                      <li>Practice consistently—nightly repetition builds neural pathways</li>
+                      <li>Don't force it; let the story wash over you as you drift</li>
+                      <li>Trust the process; changes happen beneath conscious awareness</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Guide Toggle Button */}
+      {!showGuide && manifestations.length > 0 && (
+        <Button
+          variant="outline"
+          onClick={() => setShowGuide(true)}
+          className="w-full border-purple-200 text-purple-600 hover:bg-purple-50"
+        >
+          <Info className="w-4 h-4 mr-2" />
+          How to Use Image Rehearsal Therapy
+        </Button>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <motion.div
