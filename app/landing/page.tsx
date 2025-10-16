@@ -4,6 +4,7 @@ import { BridgeSection } from '@/components/landing/bridge-section'
 import { ToolSection } from '@/components/landing/tool-section'
 import { TransformationSection } from '@/components/landing/transformation-section'
 import { DestinySection } from '@/components/landing/destiny-section'
+import { GuidesSection } from '@/components/landing/guides-section'
 import { Footer } from '@/components/landing/footer'
 
 export default function LandingPage() {
@@ -15,6 +16,7 @@ export default function LandingPage() {
       <ToolSection />
       <TransformationSection />
       <DestinySection />
+      <GuidesSection />
       <Footer />
     </div>
   )
