@@ -145,7 +145,7 @@ export async function generateImage(
 }
 
 /**
- * Generate video from image using Kie.ai Veo3 API
+ * Generate video from image using Kie.ai Veo3 Fast API
  * @param prompt - Description of the video motion/animation
  * @param imageUrl - URL of the source image
  * @param aspectRatio - Video aspect ratio ('16:9' or '9:16')
@@ -165,7 +165,7 @@ export async function generateVideoFromImage(
         'Authorization': `Bearer ${KIE_AI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'veo3',
+        model: 'veo3_fast',
         prompt,
         imageUrls: [imageUrl],
         aspectRatio: aspectRatio,
