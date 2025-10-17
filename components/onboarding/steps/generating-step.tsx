@@ -52,6 +52,7 @@ export function GeneratingStep({ onNext, data, updateData }: GeneratingStepProps
     }
 
     generateIdealSelf()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
