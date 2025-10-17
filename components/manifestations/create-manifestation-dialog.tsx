@@ -72,7 +72,7 @@ export function CreateManifestationDialog({
           <div className="bg-purple-50 rounded-lg p-4 text-sm text-gray-700">
             <p className="font-medium text-purple-900 mb-2">How this works:</p>
             <p>
-              Describe a challenging dream or situation you want to transform. We'll create a powerful
+              Describe a challenging dream or situation you want to transform. We&apos;ll create a powerful
               Image Rehearsal Therapy narrative where you overcome this challenge and embody your ideal self.
             </p>
           </div>
