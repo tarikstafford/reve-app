@@ -33,16 +33,21 @@ export async function POST(request: NextRequest) {
       // Generate narrative with title and tags
       const manifestationPrompt = `Create a manifestation for ${profile.name} focused on ${theme}. They love their ${profile.qualityLoved} and are developing ${profile.qualityDesired}, inspired by ${profile.idol}.
 
+This should be a transformative Image Rehearsal Therapy (IRT) narrative - like a chapter in a book. Create a vivid story where they transform a challenging situation into an empowering one.
+
+Structure it like this example:
+"You walk into a party and feel the familiar tension of being an outsider. But this time, you notice something different - a golden key in your pocket. With curiosity, you discover a hidden door you've never seen before. You turn the key, and it opens to reveal your true self. Now you're dancing freely, your body moving with natural grace. People are drawn to your authentic energy. You connect deeply with others, sharing laughter and meaningful moments. This is who you truly are."
+
 Return a JSON object with:
-- title: A short, inspiring title (3-5 words)
-- narrative: A powerful manifestation narrative (3-4 sentences) in second person ("You are..."). Make it dreamlike, empowering, and suitable for daily repetition
-- tags: An array of 3-5 relevant tags (e.g., "confidence", "self-love", "transformation", "peace", "strength", "clarity", "abundance", "joy")
+- title: A compelling title (3-5 words) that captures the transformation
+- narrative: A vivid IRT narrative (8-12 sentences) in second person. Start with a challenging moment, introduce a symbolic object or turning point, then show the complete transformation. Use specific, visual details. Make it feel like a lucid dream where they rehearse their ideal self.
+- tags: An array of 3-5 relevant tags
 
 Example format:
 {
-  "title": "Radiant Self-Confidence",
-  "narrative": "You are standing in your power, radiating confidence with every breath...",
-  "tags": ["confidence", "self-love", "empowerment"]
+  "title": "The Secret Door",
+  "narrative": "Your full transformative story here...",
+  "tags": ["transformation", "confidence", "connection"]
 }`
 
       const manifestationResponse = await openai.chat.completions.create({
@@ -50,15 +55,15 @@ Example format:
         messages: [
           {
             role: 'system',
-            content: 'You are a master of positive psychology and manifestation practices. Write empowering, dreamlike affirmations. Always respond with valid JSON only.'
+            content: 'You are a master of Image Rehearsal Therapy and transformative storytelling. Write vivid, narrative-driven manifestations that help people rehearse their ideal self. Use specific visual imagery and symbolic objects. Create complete story arcs from challenge to triumph. Always respond with valid JSON only.'
           },
           {
             role: 'user',
             content: manifestationPrompt
           }
         ],
-        temperature: 0.8,
-        max_tokens: 250,
+        temperature: 0.9,
+        max_tokens: 800,
         response_format: { type: 'json_object' }
       })
 

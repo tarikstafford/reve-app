@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { Manifestation } from '@/lib/db/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Play, Volume2, Sparkles, RefreshCw, Info, X, Brain, Moon, Waves } from 'lucide-react'
+import { Play, Volume2, Sparkles, RefreshCw, Info, X, Brain, Moon, Waves, Plus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ManifestationDetailDialog } from './manifestation-detail-dialog'
+import { CreateManifestationDialog } from './create-manifestation-dialog'
 
 export function ManifestationLibrary() {
   const [manifestations, setManifestations] = useState<Manifestation[]>([])
@@ -14,6 +15,7 @@ export function ManifestationLibrary() {
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
 
   useEffect(() => {
     loadManifestations()
@@ -64,6 +66,19 @@ export function ManifestationLibrary() {
 
   return (
     <div className="space-y-6">
+      {/* Create Button - Shows when manifestations exist */}
+      {manifestations.length > 0 && (
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setShowCreateDialog(true)}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Manifestation
+          </Button>
+        </div>
+      )}
+
       {/* IRT Usage Guide */}
       <AnimatePresence>
         {showGuide && (
@@ -284,6 +299,12 @@ export function ManifestationLibrary() {
           onPlayCountUpdate={loadManifestations}
         />
       )}
+
+      <CreateManifestationDialog
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onSuccess={loadManifestations}
+      />
     </div>
   )
 }
