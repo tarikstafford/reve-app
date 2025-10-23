@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { generateImage, generateVideoFromImage, generateStoryboardVideo } from '@/lib/kie-ai/client'
+import {
+  generateImage,
+  generateVideoFromImage,
+  generateStoryboardVideo,
+  checkImageTaskStatus,
+  checkStoryboardTaskStatus,
+  checkVeo3TaskStatus
+} from '@/lib/kie-ai/client'
 import {
   downloadAndUploadToStorage,
   getDreamImagePath,
@@ -98,9 +105,36 @@ async function processQueue() {
     try {
       console.log(`Processing media for ${task.entity_type} ${task.entity_id}`)
 
-      // Step 1: Generate image with Kie.ai
-      console.log('Generating image...')
-      const kieImageUrl = await generateImage(task.image_prompt, '1:1')
+      // Step 1: Check if we have an existing image task to recover
+      let kieImageUrl: string
+      let imageTaskId: string
+
+      if (task.kie_image_task_id) {
+        console.log(`Found existing image task ID: ${task.kie_image_task_id}, checking status...`)
+        const recoveredImageUrl = await checkImageTaskStatus(task.kie_image_task_id)
+        if (recoveredImageUrl) {
+          kieImageUrl = recoveredImageUrl
+          imageTaskId = task.kie_image_task_id
+          console.log('✅ Recovered image from existing task')
+        } else {
+          console.log('⚠️ Existing image task not ready, generating new image...')
+          const imageResult = await generateImage(task.image_prompt, '1:1')
+          kieImageUrl = imageResult.imageUrl
+          imageTaskId = imageResult.taskId
+        }
+      } else {
+        // Generate new image
+        console.log('Generating image...')
+        const imageResult = await generateImage(task.image_prompt, '1:1')
+        kieImageUrl = imageResult.imageUrl
+        imageTaskId = imageResult.taskId
+
+        // Save task ID immediately for recovery
+        await supabase
+          .from('media_generation_queue')
+          .update({ kie_image_task_id: imageTaskId })
+          .eq('id', task.id)
+      }
 
       // Step 2: Upload image to Supabase Storage
       console.log('Uploading image to Supabase Storage...')
@@ -113,36 +147,83 @@ async function processQueue() {
 
       const imageUrl = await downloadAndUploadToStorage(kieImageUrl, imagePath)
 
-      // Step 3: Generate video - use Sora 2 Pro Storyboard if 3 prompts exist, otherwise use Veo3
+      // Step 3: Check if we have an existing video task to recover, or generate new video
       console.log('Generating video...')
       console.log('Task prompts check:', {
         has_part1: !!task.video_prompt_part1,
         has_part2: !!task.video_prompt_part2,
         has_part3: !!task.video_prompt_part3,
         has_legacy: !!task.video_prompt,
+        has_existing_task: !!task.kie_video_task_id,
         part1_preview: task.video_prompt_part1?.slice(0, 50),
         part2_preview: task.video_prompt_part2?.slice(0, 50),
         part3_preview: task.video_prompt_part3?.slice(0, 50)
       })
       let kieVideoUrl: string
+      let videoTaskId: string
 
-      if (task.video_prompt_part1 && task.video_prompt_part2 && task.video_prompt_part3) {
-        // Use Sora 2 Pro Storyboard for 3-part narrative (15 seconds)
-        console.log('✅ Using Sora 2 Pro Storyboard (3 parts, 15 seconds)')
-        console.log('Shot 1:', task.video_prompt_part1)
-        console.log('Shot 2:', task.video_prompt_part2)
-        console.log('Shot 3:', task.video_prompt_part3)
-        kieVideoUrl = await generateStoryboardVideo(
-          [task.video_prompt_part1, task.video_prompt_part2, task.video_prompt_part3],
-          kieImageUrl,
-          'landscape'
-        )
-      } else if (task.video_prompt) {
-        // Fallback to Veo3 for legacy single-prompt videos
-        console.log('⚠️ Using Veo3 Fast (legacy single prompt) - 3-part prompts not found')
-        kieVideoUrl = await generateVideoFromImage(task.video_prompt, kieImageUrl, '16:9')
+      // Try to recover existing video task first
+      if (task.kie_video_task_id) {
+        console.log(`Found existing video task ID: ${task.kie_video_task_id}, checking status...`)
+        const usesStoryboard = task.video_prompt_part1 && task.video_prompt_part2 && task.video_prompt_part3
+        const recoveredVideoUrl = usesStoryboard
+          ? await checkStoryboardTaskStatus(task.kie_video_task_id)
+          : await checkVeo3TaskStatus(task.kie_video_task_id)
+
+        if (recoveredVideoUrl) {
+          kieVideoUrl = recoveredVideoUrl
+          videoTaskId = task.kie_video_task_id
+          console.log('✅ Recovered video from existing task')
+        } else {
+          console.log('⚠️ Existing video task not ready, generating new video...')
+          if (usesStoryboard) {
+            console.log('✅ Using Sora 2 Pro Storyboard (3 parts, 15 seconds)')
+            const videoResult = await generateStoryboardVideo(
+              [task.video_prompt_part1, task.video_prompt_part2, task.video_prompt_part3],
+              kieImageUrl,
+              'landscape'
+            )
+            kieVideoUrl = videoResult.videoUrl
+            videoTaskId = videoResult.taskId
+          } else if (task.video_prompt) {
+            console.log('⚠️ Using Veo3 Fast (legacy single prompt)')
+            const videoResult = await generateVideoFromImage(task.video_prompt, kieImageUrl, '16:9')
+            kieVideoUrl = videoResult.videoUrl
+            videoTaskId = videoResult.taskId
+          } else {
+            throw new Error('No video prompts found in task')
+          }
+        }
       } else {
-        throw new Error('No video prompts found in task')
+        // Generate new video
+        if (task.video_prompt_part1 && task.video_prompt_part2 && task.video_prompt_part3) {
+          // Use Sora 2 Pro Storyboard for 3-part narrative (15 seconds)
+          console.log('✅ Using Sora 2 Pro Storyboard (3 parts, 15 seconds)')
+          console.log('Shot 1:', task.video_prompt_part1)
+          console.log('Shot 2:', task.video_prompt_part2)
+          console.log('Shot 3:', task.video_prompt_part3)
+          const videoResult = await generateStoryboardVideo(
+            [task.video_prompt_part1, task.video_prompt_part2, task.video_prompt_part3],
+            kieImageUrl,
+            'landscape'
+          )
+          kieVideoUrl = videoResult.videoUrl
+          videoTaskId = videoResult.taskId
+        } else if (task.video_prompt) {
+          // Fallback to Veo3 for legacy single-prompt videos
+          console.log('⚠️ Using Veo3 Fast (legacy single prompt) - 3-part prompts not found')
+          const videoResult = await generateVideoFromImage(task.video_prompt, kieImageUrl, '16:9')
+          kieVideoUrl = videoResult.videoUrl
+          videoTaskId = videoResult.taskId
+        } else {
+          throw new Error('No video prompts found in task')
+        }
+
+        // Save task ID immediately for recovery
+        await supabase
+          .from('media_generation_queue')
+          .update({ kie_video_task_id: videoTaskId })
+          .eq('id', task.id)
       }
 
       // Step 4: Upload video to Supabase Storage
@@ -175,13 +256,15 @@ async function processQueue() {
 
       console.log(`Successfully updated ${tableName} ${task.entity_id} with media URLs`)
 
-      // Step 6: Mark task as completed
+      // Step 6: Mark task as completed with Kie task IDs
       const { error: queueUpdateError } = await supabase
         .from('media_generation_queue')
         .update({
           status: 'completed',
           image_url: imageUrl,
           video_url: videoUrl,
+          kie_image_task_id: imageTaskId,
+          kie_video_task_id: videoTaskId,
           completed_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })

@@ -6,6 +6,16 @@
 const KIE_AI_BASE_URL = 'https://api.kie.ai'
 const KIE_AI_API_KEY = process.env.KIE_AI_API_KEY || 'dummy-key-for-build'
 
+export interface GenerateImageResult {
+  imageUrl: string
+  taskId: string
+}
+
+export interface GenerateVideoResult {
+  videoUrl: string
+  taskId: string
+}
+
 interface ImageGenerationResponse {
   code: number
   msg: string
@@ -48,12 +58,12 @@ interface TaskStatusResponse {
  * Generate image using Kie.ai 4O Image API
  * @param prompt - Description of the image to generate
  * @param aspectRatio - Aspect ratio (default: '1:1')
- * @returns Image URL once generation is complete
+ * @returns Image URL and task ID once generation is complete
  */
 export async function generateImage(
   prompt: string,
   aspectRatio: '1:1' | '16:9' | '9:16' = '1:1'
-): Promise<string> {
+): Promise<GenerateImageResult> {
   try {
     // Create generation task
     const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/gpt4o-image/generate`, {
@@ -123,7 +133,7 @@ export async function generateImage(
 
         if (imageUrl) {
           console.log(`Image generation complete: ${imageUrl}`)
-          return imageUrl
+          return { imageUrl, taskId }
         } else {
           console.warn('Task marked as complete but no image URL found. Full response:', JSON.stringify(statusData, null, 2))
           throw new Error('Image generation completed but no URL returned')
@@ -145,18 +155,63 @@ export async function generateImage(
 }
 
 /**
+ * Check status of existing image task (for recovery from polling failures)
+ * @param taskId - The Kie.ai task ID to check
+ * @returns Image URL if task completed, null if still pending/failed
+ */
+export async function checkImageTaskStatus(taskId: string): Promise<string | null> {
+  try {
+    console.log(`Checking existing image task status: ${taskId}`)
+
+    const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/gpt4o-image/record-info?taskId=${taskId}`, {
+      headers: {
+        'Authorization': `Bearer ${KIE_AI_API_KEY}`
+      }
+    })
+
+    if (!statusResponse.ok) {
+      console.warn(`Failed to check image task ${taskId}: ${statusResponse.statusText}`)
+      return null
+    }
+
+    const statusData: TaskStatusResponse = await statusResponse.json()
+
+    if (statusData.code !== 200) {
+      console.warn(`Image task status check returned non-200: ${statusData.msg}`)
+      return null
+    }
+
+    // Check if task completed successfully
+    if (statusData.data.successFlag === 1 || statusData.data.status === 'SUCCESS') {
+      const imageUrl = statusData.data.response?.resultUrls?.[0]
+      if (imageUrl) {
+        console.log(`✅ Recovered completed image task ${taskId}: ${imageUrl}`)
+        return imageUrl
+      }
+    }
+
+    // Task still pending or failed
+    console.log(`Image task ${taskId} status: ${statusData.data.status}`)
+    return null
+  } catch (error) {
+    console.error(`Error checking image task ${taskId}:`, error)
+    return null
+  }
+}
+
+/**
  * Generate storyboard video using Kie.ai Sora 2 Pro Storyboard API
  * Creates a 15-second video from 3 prompts (5 seconds each)
  * @param prompts - Array of 3 prompts for beginning, middle, and end
  * @param imageUrl - URL of the source image
  * @param aspectRatio - Video aspect ratio ('portrait' or 'landscape')
- * @returns Video URL once generation is complete
+ * @returns Video URL and task ID once generation is complete
  */
 export async function generateStoryboardVideo(
   prompts: [string, string, string],
   imageUrl: string,
   aspectRatio: 'portrait' | 'landscape' = 'landscape'
-): Promise<string> {
+): Promise<GenerateVideoResult> {
   try {
     // Create storyboard video generation task with Sora 2 Pro
     const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/jobs/createTask`, {
@@ -243,7 +298,7 @@ export async function generateStoryboardVideo(
 
         if (videoUrl) {
           console.log(`Storyboard video generation complete: ${videoUrl}`)
-          return videoUrl
+          return { videoUrl, taskId }
         } else {
           console.warn('Task marked as complete but no video URL found. Full response:', JSON.stringify(statusData, null, 2))
           throw new Error('Storyboard video generation completed but no URL returned')
@@ -264,17 +319,62 @@ export async function generateStoryboardVideo(
 }
 
 /**
+ * Check status of existing storyboard video task (for recovery from polling failures)
+ * @param taskId - The Kie.ai task ID to check
+ * @returns Video URL if task completed, null if still pending/failed
+ */
+export async function checkStoryboardTaskStatus(taskId: string): Promise<string | null> {
+  try {
+    console.log(`Checking existing storyboard task status: ${taskId}`)
+
+    const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/jobs/task-info?taskId=${taskId}`, {
+      headers: {
+        'Authorization': `Bearer ${KIE_AI_API_KEY}`
+      }
+    })
+
+    if (!statusResponse.ok) {
+      console.warn(`Failed to check storyboard task ${taskId}: ${statusResponse.statusText}`)
+      return null
+    }
+
+    const statusData: TaskStatusResponse = await statusResponse.json()
+
+    if (statusData.code !== 200) {
+      console.warn(`Storyboard task status check returned non-200: ${statusData.msg}`)
+      return null
+    }
+
+    // Check if task completed successfully
+    if (statusData.data.successFlag === 1 || statusData.data.status === 'SUCCESS') {
+      const videoUrl = statusData.data.response?.resultUrls?.[0]
+      if (videoUrl) {
+        console.log(`✅ Recovered completed storyboard task ${taskId}: ${videoUrl}`)
+        return videoUrl
+      }
+    }
+
+    // Task still pending or failed
+    console.log(`Storyboard task ${taskId} status: ${statusData.data.status}`)
+    return null
+  } catch (error) {
+    console.error(`Error checking storyboard task ${taskId}:`, error)
+    return null
+  }
+}
+
+/**
  * Generate video from image using Kie.ai Veo3 Fast API
  * @param prompt - Description of the video motion/animation
  * @param imageUrl - URL of the source image
  * @param aspectRatio - Video aspect ratio ('16:9' or '9:16')
- * @returns Video URL once generation is complete
+ * @returns Video URL and task ID once generation is complete
  */
 export async function generateVideoFromImage(
   prompt: string,
   imageUrl: string,
   aspectRatio: '16:9' | '9:16' = '16:9'
-): Promise<string> {
+): Promise<GenerateVideoResult> {
   try {
     // Create video generation task with Veo3
     const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/veo/generate`, {
@@ -347,7 +447,7 @@ export async function generateVideoFromImage(
 
         if (videoUrl) {
           console.log(`Video generation complete: ${videoUrl}`)
-          return videoUrl
+          return { videoUrl, taskId }
         } else {
           console.warn('Task marked as complete but no video URL found. Full response:', JSON.stringify(statusData, null, 2))
           throw new Error('Video generation completed but no URL returned')
@@ -364,5 +464,50 @@ export async function generateVideoFromImage(
   } catch (error) {
     console.error('Kie.ai video generation error:', error)
     throw error
+  }
+}
+
+/**
+ * Check status of existing Veo3 video task (for recovery from polling failures)
+ * @param taskId - The Kie.ai task ID to check
+ * @returns Video URL if task completed, null if still pending/failed
+ */
+export async function checkVeo3TaskStatus(taskId: string): Promise<string | null> {
+  try {
+    console.log(`Checking existing Veo3 task status: ${taskId}`)
+
+    const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/veo/record-info?taskId=${taskId}`, {
+      headers: {
+        'Authorization': `Bearer ${KIE_AI_API_KEY}`
+      }
+    })
+
+    if (!statusResponse.ok) {
+      console.warn(`Failed to check Veo3 task ${taskId}: ${statusResponse.statusText}`)
+      return null
+    }
+
+    const statusData: TaskStatusResponse = await statusResponse.json()
+
+    if (statusData.code !== 200) {
+      console.warn(`Veo3 task status check returned non-200: ${statusData.msg}`)
+      return null
+    }
+
+    // Check if task completed successfully
+    if (statusData.data.successFlag === 1 || statusData.data.status === 'SUCCESS') {
+      const videoUrl = statusData.data.response?.resultUrls?.[0]
+      if (videoUrl) {
+        console.log(`✅ Recovered completed Veo3 task ${taskId}: ${videoUrl}`)
+        return videoUrl
+      }
+    }
+
+    // Task still pending or failed
+    console.log(`Veo3 task ${taskId} status: ${statusData.data.status}`)
+    return null
+  } catch (error) {
+    console.error(`Error checking Veo3 task ${taskId}:`, error)
+    return null
   }
 }

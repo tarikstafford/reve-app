@@ -45,7 +45,8 @@ Write in second person ("You are..."). Be poetic, dreamlike, and encouraging. Fo
 
     let imageUrl = ''
     try {
-      imageUrl = await generateImage(imagePrompt, '1:1')
+      const imageResult = await generateImage(imagePrompt, '1:1')
+      imageUrl = imageResult.imageUrl
     } catch (error) {
       console.error('Error generating ideal self image:', error)
     }
