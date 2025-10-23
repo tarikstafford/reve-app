@@ -41,13 +41,26 @@ export async function GET() {
       )
     }
 
-    // Check for pending/processing dreams and attempt recovery
+    // Check for dreams with incomplete media and attempt recovery
     const serviceSupabase = createServiceClient()
     const recoveryPromises = (dreams || [])
-      .filter(dream => dream.media_status === 'pending' || dream.media_status === 'processing')
+      .filter(dream => {
+        // Check dreams that are pending/processing OR missing media URLs
+        const needsRecovery =
+          dream.media_status === 'pending' ||
+          dream.media_status === 'processing' ||
+          !dream.image_url ||
+          !dream.video_url
+
+        if (needsRecovery) {
+          console.log(`Dream ${dream.id} may need recovery - status: ${dream.media_status}, has_image: ${!!dream.image_url}, has_video: ${!!dream.video_url}`)
+        }
+
+        return needsRecovery
+      })
       .map(async (dream) => {
         try {
-          console.log(`Checking recovery options for dream ${dream.id} with status ${dream.media_status}`)
+          console.log(`🔍 Checking recovery options for dream ${dream.id} with status ${dream.media_status}`)
 
           // Get queue entry for this dream
           const { data: queueTask } = await serviceSupabase
@@ -62,6 +75,14 @@ export async function GET() {
             return
           }
 
+          console.log(`Queue task for dream ${dream.id}:`, {
+            status: queueTask.status,
+            has_image_task_id: !!queueTask.kie_image_task_id,
+            has_video_task_id: !!queueTask.kie_video_task_id,
+            has_image_url: !!queueTask.image_url,
+            has_video_url: !!queueTask.video_url
+          })
+
           let imageRecovered = false
           let videoRecovered = false
           let kieImageUrl: string | null = null
@@ -69,23 +90,31 @@ export async function GET() {
 
           // Try to recover image if we have a task ID but no final image URL in dream or queue
           if (queueTask.kie_image_task_id && (!dream.image_url || !queueTask.image_url)) {
+            console.log(`📸 Attempting to recover image from task ${queueTask.kie_image_task_id}`)
             kieImageUrl = await checkImageTaskStatus(queueTask.kie_image_task_id)
             if (kieImageUrl) {
-              console.log(`✅ Recovered image for dream ${dream.id}`)
+              console.log(`✅ Recovered image for dream ${dream.id}: ${kieImageUrl}`)
               imageRecovered = true
+            } else {
+              console.log(`⏳ Image task ${queueTask.kie_image_task_id} not ready yet`)
             }
           }
 
           // Try to recover video if we have a task ID but no final video URL in dream or queue
           if (queueTask.kie_video_task_id && (!dream.video_url || !queueTask.video_url)) {
+            console.log(`🎥 Attempting to recover video from task ${queueTask.kie_video_task_id}`)
             const usesStoryboard = queueTask.video_prompt_part1 && queueTask.video_prompt_part2 && queueTask.video_prompt_part3
+            console.log(`Using ${usesStoryboard ? 'Sora 2 Pro Storyboard' : 'Veo3'} recovery method`)
+
             kieVideoUrl = usesStoryboard
               ? await checkStoryboardTaskStatus(queueTask.kie_video_task_id)
               : await checkVeo3TaskStatus(queueTask.kie_video_task_id)
 
             if (kieVideoUrl) {
-              console.log(`✅ Recovered video for dream ${dream.id}`)
+              console.log(`✅ Recovered video for dream ${dream.id}: ${kieVideoUrl}`)
               videoRecovered = true
+            } else {
+              console.log(`⏳ Video task ${queueTask.kie_video_task_id} not ready yet`)
             }
           }
 
