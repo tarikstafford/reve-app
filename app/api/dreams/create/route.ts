@@ -186,6 +186,12 @@ Example format:
       videoPart3 = `Dream conclusion with contemplative mood: ${content.slice(300, 450)}. Peaceful atmosphere, dreamlike closure.`
     }
 
+    console.log('=== INSERTING TO MEDIA QUEUE ===')
+    console.log('Image prompt length:', imagePrompt.length)
+    console.log('Video part 1 length:', videoPart1.length, 'Preview:', videoPart1.slice(0, 100))
+    console.log('Video part 2 length:', videoPart2.length, 'Preview:', videoPart2.slice(0, 100))
+    console.log('Video part 3 length:', videoPart3.length, 'Preview:', videoPart3.slice(0, 100))
+
     await supabase
       .from('media_generation_queue')
       .insert({
@@ -198,6 +204,8 @@ Example format:
         video_prompt_part3: videoPart3,
         status: 'pending'
       })
+
+    console.log('✅ Dream and media queue entry created successfully')
 
     // Trigger background generation (fire and forget)
     fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/media/process-queue`, {
