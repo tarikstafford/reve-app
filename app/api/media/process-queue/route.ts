@@ -22,15 +22,20 @@ import {
 
 // GET handler for Vercel Cron
 export async function GET() {
+  console.log('🔄 Media processor triggered by CRON')
   return processQueue()
 }
 
 // POST handler for manual triggers
 export async function POST() {
+  console.log('🔄 Media processor triggered by MANUAL call')
   return processQueue()
 }
 
 async function processQueue() {
+  const startTime = Date.now()
+  console.log(`=== MEDIA PROCESSOR STARTED at ${new Date().toISOString()} ===`)
+
   try {
     const supabase = createServiceClient()
 
@@ -63,8 +68,12 @@ async function processQueue() {
 
     const task = tasks[0]
 
-    // Update task status to processing
-    await supabase
+    console.log(`Found pending task: ${task.id} for ${task.entity_type} ${task.entity_id}`)
+    console.log(`Task attempts: ${task.attempts}/3, current status: ${task.status}`)
+
+    // Update task status to processing with optimistic locking
+    // Only update if status is still 'pending' to prevent race conditions
+    const { data: updatedTask, error: updateError } = await supabase
       .from('media_generation_queue')
       .update({
         status: 'processing',
@@ -72,6 +81,16 @@ async function processQueue() {
         updated_at: new Date().toISOString()
       })
       .eq('id', task.id)
+      .eq('status', 'pending') // Only update if still pending
+      .select()
+      .single()
+
+    if (updateError || !updatedTask) {
+      console.warn(`Task ${task.id} was already picked up by another worker, skipping`)
+      return NextResponse.json({ success: true, message: 'Task already being processed' })
+    }
+
+    console.log(`✅ Task ${task.id} locked for processing`)
 
     try {
       console.log(`Processing media for ${task.entity_type} ${task.entity_id}`)
@@ -229,5 +248,8 @@ async function processQueue() {
       success: false,
       error: errorMessage
     }, { status: 500 })
+  } finally {
+    const duration = Date.now() - startTime
+    console.log(`=== MEDIA PROCESSOR COMPLETED in ${duration}ms at ${new Date().toISOString()} ===`)
   }
 }
