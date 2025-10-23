@@ -67,8 +67,8 @@ export async function GET() {
           let kieImageUrl: string | null = null
           let kieVideoUrl: string | null = null
 
-          // Try to recover image if we have a task ID but no image URL yet
-          if (queueTask.kie_image_task_id && !dream.image_url) {
+          // Try to recover image if we have a task ID but no final image URL in dream or queue
+          if (queueTask.kie_image_task_id && (!dream.image_url || !queueTask.image_url)) {
             kieImageUrl = await checkImageTaskStatus(queueTask.kie_image_task_id)
             if (kieImageUrl) {
               console.log(`✅ Recovered image for dream ${dream.id}`)
@@ -76,8 +76,8 @@ export async function GET() {
             }
           }
 
-          // Try to recover video if we have a task ID but no video URL yet
-          if (queueTask.kie_video_task_id && !dream.video_url) {
+          // Try to recover video if we have a task ID but no final video URL in dream or queue
+          if (queueTask.kie_video_task_id && (!dream.video_url || !queueTask.video_url)) {
             const usesStoryboard = queueTask.video_prompt_part1 && queueTask.video_prompt_part2 && queueTask.video_prompt_part3
             kieVideoUrl = usesStoryboard
               ? await checkStoryboardTaskStatus(queueTask.kie_video_task_id)
