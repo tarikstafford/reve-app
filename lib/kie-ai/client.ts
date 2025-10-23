@@ -159,17 +159,33 @@ export async function generateStoryboardVideo(
 ): Promise<string> {
   try {
     // Create storyboard video generation task with Sora 2 Pro
-    const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/sora-pro-storyboard/generate`, {
+    const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/jobs/createTask`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${KIE_AI_API_KEY}`
       },
       body: JSON.stringify({
-        prompts,
-        image_urls: [imageUrl], // Reference image for visual consistency
-        n_frames: '15', // 15 seconds total (3 chunks × 5 seconds)
-        aspect_ratio: aspectRatio
+        model: 'sora-2-pro-storyboard',
+        input: {
+          n_frames: '15',
+          image_urls: [imageUrl],
+          aspect_ratio: aspectRatio,
+          shots: [
+            {
+              Scene: prompts[0],
+              duration: 5
+            },
+            {
+              Scene: prompts[1],
+              duration: 5
+            },
+            {
+              Scene: prompts[2],
+              duration: 5
+            }
+          ]
+        }
       })
     })
 
@@ -200,7 +216,7 @@ export async function generateStoryboardVideo(
 
       console.log(`Polling Kie.ai storyboard task status (attempt ${attempt + 1}/${maxAttempts}): ${taskId}`)
 
-      const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/sora-pro-storyboard/record-info?taskId=${taskId}`, {
+      const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/jobs/task-info?taskId=${taskId}`, {
         headers: {
           'Authorization': `Bearer ${KIE_AI_API_KEY}`
         }
