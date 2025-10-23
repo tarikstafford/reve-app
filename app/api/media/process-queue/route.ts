@@ -20,6 +20,9 @@ import {
  * 5. Updates entity with media URLs
  */
 
+// Increase timeout for long-running media generation (max 5 minutes on Hobby plan)
+export const maxDuration = 300 // 5 minutes
+
 // GET handler for Vercel Cron
 export async function GET() {
   console.log('🔄 Media processor triggered by CRON')

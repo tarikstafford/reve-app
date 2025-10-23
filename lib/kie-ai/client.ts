@@ -87,8 +87,8 @@ export async function generateImage(
       throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
     }
 
-    // Poll for completion (max 60 seconds)
-    const maxAttempts = 30
+    // Poll for completion (max 3 minutes)
+    const maxAttempts = 90
     const pollInterval = 2000 // 2 seconds
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -137,7 +137,7 @@ export async function generateImage(
 
     }
 
-    throw new Error('Image generation timed out after 60 seconds')
+    throw new Error('Image generation timed out after 3 minutes')
   } catch (error) {
     console.error('Kie.ai image generation error:', error)
     throw error
