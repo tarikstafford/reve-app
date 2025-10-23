@@ -102,27 +102,31 @@ Respond in JSON format:
       )
     }
 
-    // Generate image prompt
-    const imagePrompt = `A surrealist dreamscape with ethereal, abstract imagery. ${content.slice(0, 400)}. Soft colors, dreamlike atmosphere, mystical, cinematic lighting. NO TEXT, NO WORDS, NO LETTERS in the image.`
+    // Generate image prompt using the FULL dream content
+    const imagePrompt = `A surrealist dreamscape with ethereal, abstract imagery. ${content}. Soft colors, dreamlike atmosphere, mystical, cinematic lighting. NO TEXT, NO WORDS, NO LETTERS in the image.`
 
     // Use GPT-4 to intelligently create 3-part video storyboard
-    const storyboardPrompt = `You are a creative director creating a 15-second dream visualization video in 3 shots (5 seconds each).
+    const storyboardPrompt = `Create 3 cinematic video prompts for visualizing this dream as a 15-second video (3 shots, 5 seconds each).
 
-Dream content:
+DREAM:
 ${content}
 
-Create 3 cinematic video prompts that tell the dream's story with a clear beginning, middle, and end. Each prompt should:
-- Describe specific visual scenes from the dream
-- Include camera movement and lighting details
-- Maintain a surreal, dreamlike atmosphere
-- Flow naturally from one shot to the next
-- Be concise but visually rich (max 150 characters each)
+REQUIREMENTS:
+- Shot 1: Opening scene establishing the dream's setting and mood
+- Shot 2: Middle scene showing the dream's key action or development
+- Shot 3: Closing scene with resolution or emotional conclusion
+- Each prompt should be 200-300 characters
+- Include specific visual details, camera movement, and lighting
+- Maintain consistent surreal/dreamlike atmosphere across all shots
+- Make sure shots flow naturally as one continuous sequence
 
-Respond in JSON format:
+IMPORTANT: You must respond with valid JSON containing exactly these 3 fields: shot1, shot2, shot3
+
+Example format:
 {
-  "shot1": "Opening scene description with camera movement and lighting...",
-  "shot2": "Middle scene showing the dream's development...",
-  "shot3": "Closing scene with resolution or contemplation..."
+  "shot1": "Detailed opening scene with camera and lighting...",
+  "shot2": "Detailed middle scene with camera and lighting...",
+  "shot3": "Detailed closing scene with camera and lighting..."
 }`
 
     let videoPart1: string
@@ -149,18 +153,29 @@ Respond in JSON format:
       })
 
       const responseContent = storyboardResponse.choices[0].message.content
-      console.log('GPT-4 storyboard response:', responseContent)
+      console.log('=== GPT-4 STORYBOARD RESPONSE START ===')
+      console.log(responseContent)
+      console.log('=== GPT-4 STORYBOARD RESPONSE END ===')
 
       const storyboard = JSON.parse(responseContent || '{}')
-      console.log('Parsed storyboard:', storyboard)
+      console.log('=== PARSED STORYBOARD OBJECT ===')
+      console.log(JSON.stringify(storyboard, null, 2))
+      console.log('Fields present:', Object.keys(storyboard))
+      console.log('shot1 exists?', !!storyboard.shot1, 'type:', typeof storyboard.shot1)
+      console.log('shot2 exists?', !!storyboard.shot2, 'type:', typeof storyboard.shot2)
+      console.log('shot3 exists?', !!storyboard.shot3, 'type:', typeof storyboard.shot3)
 
       if (storyboard.shot1 && storyboard.shot2 && storyboard.shot3) {
         videoPart1 = storyboard.shot1
         videoPart2 = storyboard.shot2
         videoPart3 = storyboard.shot3
         console.log('✅ Successfully generated 3-part storyboard')
+        console.log('Shot 1 length:', videoPart1.length)
+        console.log('Shot 2 length:', videoPart2.length)
+        console.log('Shot 3 length:', videoPart3.length)
       } else {
         console.warn('⚠️ GPT-4 response missing shots, using fallback')
+        console.warn('Available fields in response:', Object.keys(storyboard))
         throw new Error('Missing shots in response')
       }
     } catch (error) {
