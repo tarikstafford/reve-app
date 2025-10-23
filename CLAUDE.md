@@ -49,11 +49,14 @@ This document provides context for Claude Code when working on the Rêve applica
 **Implementation:**
 - `lib/kie-ai/client.ts` - Kie.ai API wrapper
 - Image generation: 4O Image API with polling every 2 seconds
-- Video generation: Veo3 API (Google's model) with polling every 5 seconds
+- Video generation: Sora 2 Pro Storyboard API with 3-part narrative (15 seconds total)
+  - Creates 3 chunks of 5 seconds each (beginning, middle, end)
+  - Provides complete dream story arc instead of single short clip
+  - Fallback to Veo3 Fast for legacy single-prompt videos
 - Both use same polling pattern (unified approach)
 - Automatic retry logic with exponential backoff
 
-**IMPORTANT:** Always use Kie.ai for image/video generation, not OpenAI APIs. Veo3 replaced Sora 2 for unified polling approach.
+**IMPORTANT:** Always use Kie.ai for image/video generation, not OpenAI APIs. Dreams use Sora 2 Pro Storyboard for 15-second narrative videos.
 
 ### 3. Permanent Storage Pattern
 

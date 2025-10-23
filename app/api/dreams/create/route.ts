@@ -104,7 +104,13 @@ Respond in JSON format:
 
     // Queue media generation (async - don't wait for it)
     const imagePrompt = `A surrealist dreamscape with ethereal, abstract imagery. ${content.slice(0, 400)}. Soft colors, dreamlike atmosphere, mystical, cinematic lighting. NO TEXT, NO WORDS, NO LETTERS in the image.`
-    const videoPrompt = `Ethereal dream sequence with slow, flowing movements. The scene breathes and transforms subtly, with soft particles floating through space. Gentle, mystical atmosphere with dreamy lighting transitions.`
+
+    // Generate 3-part video prompts for storyboard (beginning, middle, end)
+    // Each part should represent one-third of the dream narrative
+    const dreamContent = content.slice(0, 800) // Use more content for better story arc
+    const videoPart1 = `Beginning of a dream sequence: The scene opens with ethereal, dreamlike atmosphere. ${dreamContent.slice(0, 250)}. Soft, slow camera movement, mystical lighting, cinematic establishing shot. Dreamy, surreal visual style.`
+    const videoPart2 = `Middle of the dream: The narrative develops with flowing, transformative movements. ${dreamContent.slice(250, 500)}. Subtle scene transitions, floating particles, evolving dreamscape. Maintain mystical, ethereal atmosphere.`
+    const videoPart3 = `Conclusion of the dream: The sequence resolves with gentle, contemplative imagery. ${dreamContent.slice(500, 800)}. Soft fading transitions, peaceful atmosphere, dreamlike closure. Ethereal, cinematic final shot.`
 
     await supabase
       .from('media_generation_queue')
@@ -113,7 +119,9 @@ Respond in JSON format:
         entity_id: dream.id,
         user_id: user.id,
         image_prompt: imagePrompt,
-        video_prompt: videoPrompt,
+        video_prompt_part1: videoPart1,
+        video_prompt_part2: videoPart2,
+        video_prompt_part3: videoPart3,
         status: 'pending'
       })
 

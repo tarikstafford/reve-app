@@ -7,8 +7,13 @@ import { DreamArchive } from '@/components/dreams/dream-archive'
 import { DreamLogDialog } from '@/components/dreams/dream-log-dialog'
 import { ManifestationLibrary } from '@/components/manifestations/manifestation-library'
 import { SubconsciousChat } from '@/components/subconscious/subconscious-chat'
+import { Profile } from '@/lib/db/types'
 
-export function DashboardContent() {
+interface DashboardContentProps {
+  profile: Profile
+}
+
+export function DashboardContent({ profile }: DashboardContentProps) {
   const dreamArchiveRefreshRef = useRef<(() => void) | null>(null)
 
   const handleDreamSaved = () => {
@@ -37,7 +42,7 @@ export function DashboardContent() {
 
       <TabsContent value="dreams" className="space-y-6">
         <div className="flex justify-center">
-          <DreamLogDialog onDreamSaved={handleDreamSaved} />
+          <DreamLogDialog onDreamSaved={handleDreamSaved} profile={profile} />
         </div>
         <DreamArchive onRefreshRef={dreamArchiveRefreshRef} />
       </TabsContent>
@@ -47,7 +52,7 @@ export function DashboardContent() {
       </TabsContent>
 
       <TabsContent value="subconscious">
-        <SubconsciousChat />
+        <SubconsciousChat profile={profile} />
       </TabsContent>
     </Tabs>
   )

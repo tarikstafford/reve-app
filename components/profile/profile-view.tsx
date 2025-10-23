@@ -8,7 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Sparkles, Crown, Settings } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { format } from 'date-fns'
+import { SubscriptionStatus } from '@/components/subscription/subscription-status'
 
 export function ProfileView() {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -52,7 +52,6 @@ export function ProfileView() {
 
   const isTrialing = profile.subscription_status === 'trialing'
   const isPremium = profile.subscription_tier === 'premium'
-  const trialEndsAt = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -150,28 +149,7 @@ export function ProfileView() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white/80 backdrop-blur">
-          <CardHeader>
-            <CardTitle className="text-lg font-light">Subscription</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Current Plan</p>
-              <p className="text-gray-800 capitalize">{profile.subscription_tier}</p>
-            </div>
-            {isTrialing && trialEndsAt && (
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Trial Ends</p>
-                <p className="text-gray-800">{format(trialEndsAt, 'MMMM d, yyyy')}</p>
-              </div>
-            )}
-            {!isPremium && (
-              <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
-                Upgrade to Premium
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        <SubscriptionStatus profile={profile} />
       </div>
     </div>
   )

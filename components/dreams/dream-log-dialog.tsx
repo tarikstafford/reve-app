@@ -1,28 +1,48 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Mic, Square, Loader2, PlusCircle } from 'lucide-react'
+import { Mic, Square, Loader2, PlusCircle, Crown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Profile } from '@/lib/db/types'
+import { canCreateDream } from '@/lib/subscription/utils'
+import Link from 'next/link'
 
 interface DreamLogDialogProps {
   onDreamSaved?: () => void
+  profile: Profile
 }
 
-export function DreamLogDialog({ onDreamSaved }: DreamLogDialogProps) {
+export function DreamLogDialog({ onDreamSaved, profile }: DreamLogDialogProps) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [isRecording, setIsRecording] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
+  const [canLog, setCanLog] = useState(true)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    const fetchDreamCount = async () => {
+      try {
+        const response = await fetch('/api/dreams/count')
+        const data = await response.json()
+        if (data.success) {
+          setCanLog(canCreateDream(profile, data.count))
+        }
+      } catch (error) {
+        console.error('Error fetching dream count:', error)
+      }
+    }
+    fetchDreamCount()
+  }, [profile, open])
 
   const startRecording = async () => {
     try {
@@ -121,6 +141,46 @@ export function DreamLogDialog({ onDreamSaved }: DreamLogDialogProps) {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  if (!canLog) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button
+            size="lg"
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all"
+          >
+            <PlusCircle className="w-5 h-5 mr-2" />
+            Log a Dream
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-light text-gray-800 text-center">
+              Dream Limit Reached
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 pt-4 text-center">
+            <div className="flex justify-center">
+              <Crown className="w-16 h-16 text-purple-500" />
+            </div>
+            <p className="text-gray-600">
+              You have reached your monthly limit of 10 dreams on the free plan.
+            </p>
+            <p className="text-gray-700 font-medium">
+              Upgrade to Premium for unlimited dreams!
+            </p>
+            <Link href="/pricing">
+              <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+                <Crown className="w-4 h-4 mr-2" />
+                Upgrade to Premium
+              </Button>
+            </Link>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
   }
 
   return (

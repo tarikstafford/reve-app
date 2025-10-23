@@ -4,11 +4,17 @@ import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
-import { Message } from '@/lib/db/types'
-import { Send, Loader2, Lock } from 'lucide-react'
+import { Message, Profile } from '@/lib/db/types'
+import { Send, Loader2, Lock, Crown } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { canAccessSubconsciousChat } from '@/lib/subscription/utils'
+import Link from 'next/link'
 
-export function SubconsciousChat() {
+interface SubconsciousChatProps {
+  profile: Profile
+}
+
+export function SubconsciousChat({ profile }: SubconsciousChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -16,12 +22,14 @@ export function SubconsciousChat() {
   const [isUnlocked, setIsUnlocked] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  const hasPremiumAccess = canAccessSubconsciousChat(profile)
+
   useEffect(() => {
     checkDreamCount()
-    if (isUnlocked) {
+    if (isUnlocked || hasPremiumAccess) {
       loadMessages()
     }
-  }, [isUnlocked])
+  }, [isUnlocked, hasPremiumAccess])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -88,7 +96,7 @@ export function SubconsciousChat() {
     }
   }
 
-  if (!isUnlocked) {
+  if (!isUnlocked && !hasPremiumAccess) {
     return (
       <div className="max-w-2xl mx-auto">
         <Card className="p-12 text-center space-y-6 bg-white/80 backdrop-blur">
@@ -103,7 +111,7 @@ export function SubconsciousChat() {
               Connect with Your Subconscious
             </h3>
             <p className="text-gray-600">
-              This feature unlocks after logging 10 dreams
+              This feature unlocks after logging 10 dreams or with Premium
             </p>
             <div className="pt-4">
               <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
@@ -117,6 +125,14 @@ export function SubconsciousChat() {
               <p className="text-sm text-gray-500 mt-2">
                 {dreamCount} / 10 dreams logged
               </p>
+            </div>
+            <div className="pt-4">
+              <Link href="/pricing">
+                <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
+                  <Crown className="w-4 h-4 mr-2" />
+                  Unlock with Premium
+                </Button>
+              </Link>
             </div>
           </div>
         </Card>

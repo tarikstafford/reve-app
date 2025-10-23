@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { generateImage, generateVideoFromImage } from '@/lib/kie-ai/client'
+import { generateImage, generateVideoFromImage, generateStoryboardVideo } from '@/lib/kie-ai/client'
 import {
   downloadAndUploadToStorage,
   getDreamImagePath,
@@ -91,9 +91,25 @@ async function processQueue() {
 
       const imageUrl = await downloadAndUploadToStorage(kieImageUrl, imagePath)
 
-      // Step 3: Generate video from image with Veo3
-      console.log('Generating video with Veo3...')
-      const kieVideoUrl = await generateVideoFromImage(task.video_prompt, kieImageUrl, '16:9')
+      // Step 3: Generate video - use Sora 2 Pro Storyboard if 3 prompts exist, otherwise use Veo3
+      console.log('Generating video...')
+      let kieVideoUrl: string
+
+      if (task.video_prompt_part1 && task.video_prompt_part2 && task.video_prompt_part3) {
+        // Use Sora 2 Pro Storyboard for 3-part narrative (15 seconds)
+        console.log('Using Sora 2 Pro Storyboard (3 parts, 15 seconds)')
+        kieVideoUrl = await generateStoryboardVideo(
+          [task.video_prompt_part1, task.video_prompt_part2, task.video_prompt_part3],
+          kieImageUrl,
+          'landscape'
+        )
+      } else if (task.video_prompt) {
+        // Fallback to Veo3 for legacy single-prompt videos
+        console.log('Using Veo3 Fast (legacy single prompt)')
+        kieVideoUrl = await generateVideoFromImage(task.video_prompt, kieImageUrl, '16:9')
+      } else {
+        throw new Error('No video prompts found in task')
+      }
 
       // Step 4: Upload video to Supabase Storage
       console.log('Uploading video to Supabase Storage...')

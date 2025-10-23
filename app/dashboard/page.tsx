@@ -28,7 +28,7 @@ export default async function DashboardPage() {
   return (
     <DashboardLayout>
       <Suspense fallback={<div>Loading...</div>}>
-        <DashboardContent />
+        <DashboardContent profile={profile} />
       </Suspense>
     </DashboardLayout>
   )

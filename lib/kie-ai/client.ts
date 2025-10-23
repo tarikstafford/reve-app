@@ -145,6 +145,109 @@ export async function generateImage(
 }
 
 /**
+ * Generate storyboard video using Kie.ai Sora 2 Pro Storyboard API
+ * Creates a 15-second video from 3 prompts (5 seconds each)
+ * @param prompts - Array of 3 prompts for beginning, middle, and end
+ * @param imageUrl - URL of the source image
+ * @param aspectRatio - Video aspect ratio ('portrait' or 'landscape')
+ * @returns Video URL once generation is complete
+ */
+export async function generateStoryboardVideo(
+  prompts: [string, string, string],
+  imageUrl: string,
+  aspectRatio: 'portrait' | 'landscape' = 'landscape'
+): Promise<string> {
+  try {
+    // Create storyboard video generation task with Sora 2 Pro
+    const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/sora-pro-storyboard/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${KIE_AI_API_KEY}`
+      },
+      body: JSON.stringify({
+        prompts,
+        image_urls: [imageUrl], // Reference image for visual consistency
+        n_frames: '15', // 15 seconds total (3 chunks × 5 seconds)
+        aspect_ratio: aspectRatio
+      })
+    })
+
+    if (!generateResponse.ok) {
+      throw new Error(`Kie.ai storyboard generation failed: ${generateResponse.statusText}`)
+    }
+
+    const generateData: VideoGenerationResponse = await generateResponse.json()
+
+    console.log('Kie.ai storyboard generation response:', JSON.stringify(generateData, null, 2))
+
+    if (generateData.code !== 200) {
+      throw new Error(`Kie.ai storyboard generation failed: ${generateData.msg}`)
+    }
+
+    const taskId = generateData.data?.taskId
+
+    if (!taskId) {
+      throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
+    }
+
+    // Poll for completion (max 10 minutes for longer video generation)
+    const maxAttempts = 120
+    const pollInterval = 5000 // 5 seconds
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, pollInterval))
+
+      console.log(`Polling Kie.ai storyboard task status (attempt ${attempt + 1}/${maxAttempts}): ${taskId}`)
+
+      const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/sora-pro-storyboard/record-info?taskId=${taskId}`, {
+        headers: {
+          'Authorization': `Bearer ${KIE_AI_API_KEY}`
+        }
+      })
+
+      if (!statusResponse.ok) {
+        throw new Error(`Failed to check task status: ${statusResponse.statusText}`)
+      }
+
+      const statusData: TaskStatusResponse = await statusResponse.json()
+
+      const currentStatus = statusData.data.status || 'UNKNOWN'
+      const progress = statusData.data.progress || '0'
+      console.log(`Storyboard task status: ${currentStatus} (${progress}) - Attempt ${attempt + 1}/${maxAttempts}`)
+
+      if (statusData.code !== 200) {
+        throw new Error(`Failed to check storyboard task status: ${statusData.msg}`)
+      }
+
+      // Check if task is complete (successFlag === 1 or status === "SUCCESS")
+      if (statusData.data.successFlag === 1 || statusData.data.status === 'SUCCESS') {
+        // Extract video URL from response.resultUrls array
+        const videoUrl = statusData.data.response?.resultUrls?.[0]
+
+        if (videoUrl) {
+          console.log(`Storyboard video generation complete: ${videoUrl}`)
+          return videoUrl
+        } else {
+          console.warn('Task marked as complete but no video URL found. Full response:', JSON.stringify(statusData, null, 2))
+          throw new Error('Storyboard video generation completed but no URL returned')
+        }
+      }
+
+      // Check for failure
+      if (statusData.data.status === 'FAILED' || statusData.data.errorCode) {
+        throw new Error(`Storyboard video generation failed: ${statusData.data.errorMessage || 'Unknown error'}`)
+      }
+    }
+
+    throw new Error('Storyboard video generation timed out after 10 minutes')
+  } catch (error) {
+    console.error('Kie.ai storyboard generation error:', error)
+    throw error
+  }
+}
+
+/**
  * Generate video from image using Kie.ai Veo3 Fast API
  * @param prompt - Description of the video motion/animation
  * @param imageUrl - URL of the source image
