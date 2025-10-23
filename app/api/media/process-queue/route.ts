@@ -93,11 +93,23 @@ async function processQueue() {
 
       // Step 3: Generate video - use Sora 2 Pro Storyboard if 3 prompts exist, otherwise use Veo3
       console.log('Generating video...')
+      console.log('Task prompts check:', {
+        has_part1: !!task.video_prompt_part1,
+        has_part2: !!task.video_prompt_part2,
+        has_part3: !!task.video_prompt_part3,
+        has_legacy: !!task.video_prompt,
+        part1_preview: task.video_prompt_part1?.slice(0, 50),
+        part2_preview: task.video_prompt_part2?.slice(0, 50),
+        part3_preview: task.video_prompt_part3?.slice(0, 50)
+      })
       let kieVideoUrl: string
 
       if (task.video_prompt_part1 && task.video_prompt_part2 && task.video_prompt_part3) {
         // Use Sora 2 Pro Storyboard for 3-part narrative (15 seconds)
-        console.log('Using Sora 2 Pro Storyboard (3 parts, 15 seconds)')
+        console.log('✅ Using Sora 2 Pro Storyboard (3 parts, 15 seconds)')
+        console.log('Shot 1:', task.video_prompt_part1)
+        console.log('Shot 2:', task.video_prompt_part2)
+        console.log('Shot 3:', task.video_prompt_part3)
         kieVideoUrl = await generateStoryboardVideo(
           [task.video_prompt_part1, task.video_prompt_part2, task.video_prompt_part3],
           kieImageUrl,
@@ -105,7 +117,7 @@ async function processQueue() {
         )
       } else if (task.video_prompt) {
         // Fallback to Veo3 for legacy single-prompt videos
-        console.log('Using Veo3 Fast (legacy single prompt)')
+        console.log('⚠️ Using Veo3 Fast (legacy single prompt) - 3-part prompts not found')
         kieVideoUrl = await generateVideoFromImage(task.video_prompt, kieImageUrl, '16:9')
       } else {
         throw new Error('No video prompts found in task')
