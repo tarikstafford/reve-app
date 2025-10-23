@@ -125,27 +125,51 @@ Respond in JSON format:
   "shot3": "Closing scene with resolution or contemplation..."
 }`
 
-    const storyboardResponse = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert cinematographer specializing in surreal, dreamlike visual storytelling. Create vivid, atmospheric scene descriptions.'
-        },
-        {
-          role: 'user',
-          content: storyboardPrompt
-        }
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.8, // Higher creativity for visual descriptions
-      max_tokens: 500
-    })
+    let videoPart1: string
+    let videoPart2: string
+    let videoPart3: string
 
-    const storyboard = JSON.parse(storyboardResponse.choices[0].message.content || '{}')
-    const videoPart1 = storyboard.shot1 || `Ethereal dream opening: ${content.slice(0, 150)}`
-    const videoPart2 = storyboard.shot2 || `Dream narrative develops: ${content.slice(150, 300)}`
-    const videoPart3 = storyboard.shot3 || `Dream conclusion: ${content.slice(300, 450)}`
+    try {
+      console.log('Generating 3-part storyboard with GPT-4...')
+      const storyboardResponse = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert cinematographer specializing in surreal, dreamlike visual storytelling. Create vivid, atmospheric scene descriptions.'
+          },
+          {
+            role: 'user',
+            content: storyboardPrompt
+          }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.8,
+        max_tokens: 500
+      })
+
+      const responseContent = storyboardResponse.choices[0].message.content
+      console.log('GPT-4 storyboard response:', responseContent)
+
+      const storyboard = JSON.parse(responseContent || '{}')
+      console.log('Parsed storyboard:', storyboard)
+
+      if (storyboard.shot1 && storyboard.shot2 && storyboard.shot3) {
+        videoPart1 = storyboard.shot1
+        videoPart2 = storyboard.shot2
+        videoPart3 = storyboard.shot3
+        console.log('✅ Successfully generated 3-part storyboard')
+      } else {
+        console.warn('⚠️ GPT-4 response missing shots, using fallback')
+        throw new Error('Missing shots in response')
+      }
+    } catch (error) {
+      console.error('Error generating storyboard with GPT-4, using fallback:', error)
+      // Fallback to simple string slicing with better prompts
+      videoPart1 = `Ethereal dream opening with surreal atmosphere: ${content.slice(0, 150)}. Slow camera movement, soft mystical lighting.`
+      videoPart2 = `Dream narrative develops with flowing transitions: ${content.slice(150, 300)}. Evolving dreamscape, gentle movements.`
+      videoPart3 = `Dream conclusion with contemplative mood: ${content.slice(300, 450)}. Peaceful atmosphere, dreamlike closure.`
+    }
 
     await supabase
       .from('media_generation_queue')
