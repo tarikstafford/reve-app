@@ -102,15 +102,50 @@ Respond in JSON format:
       )
     }
 
-    // Queue media generation (async - don't wait for it)
+    // Generate image prompt
     const imagePrompt = `A surrealist dreamscape with ethereal, abstract imagery. ${content.slice(0, 400)}. Soft colors, dreamlike atmosphere, mystical, cinematic lighting. NO TEXT, NO WORDS, NO LETTERS in the image.`
 
-    // Generate 3-part video prompts for storyboard (beginning, middle, end)
-    // Each part should represent one-third of the dream narrative
-    const dreamContent = content.slice(0, 800) // Use more content for better story arc
-    const videoPart1 = `Beginning of a dream sequence: The scene opens with ethereal, dreamlike atmosphere. ${dreamContent.slice(0, 250)}. Soft, slow camera movement, mystical lighting, cinematic establishing shot. Dreamy, surreal visual style.`
-    const videoPart2 = `Middle of the dream: The narrative develops with flowing, transformative movements. ${dreamContent.slice(250, 500)}. Subtle scene transitions, floating particles, evolving dreamscape. Maintain mystical, ethereal atmosphere.`
-    const videoPart3 = `Conclusion of the dream: The sequence resolves with gentle, contemplative imagery. ${dreamContent.slice(500, 800)}. Soft fading transitions, peaceful atmosphere, dreamlike closure. Ethereal, cinematic final shot.`
+    // Use GPT-4 to intelligently create 3-part video storyboard
+    const storyboardPrompt = `You are a creative director creating a 15-second dream visualization video in 3 shots (5 seconds each).
+
+Dream content:
+${content}
+
+Create 3 cinematic video prompts that tell the dream's story with a clear beginning, middle, and end. Each prompt should:
+- Describe specific visual scenes from the dream
+- Include camera movement and lighting details
+- Maintain a surreal, dreamlike atmosphere
+- Flow naturally from one shot to the next
+- Be concise but visually rich (max 150 characters each)
+
+Respond in JSON format:
+{
+  "shot1": "Opening scene description with camera movement and lighting...",
+  "shot2": "Middle scene showing the dream's development...",
+  "shot3": "Closing scene with resolution or contemplation..."
+}`
+
+    const storyboardResponse = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert cinematographer specializing in surreal, dreamlike visual storytelling. Create vivid, atmospheric scene descriptions.'
+        },
+        {
+          role: 'user',
+          content: storyboardPrompt
+        }
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.8, // Higher creativity for visual descriptions
+      max_tokens: 500
+    })
+
+    const storyboard = JSON.parse(storyboardResponse.choices[0].message.content || '{}')
+    const videoPart1 = storyboard.shot1 || `Ethereal dream opening: ${content.slice(0, 150)}`
+    const videoPart2 = storyboard.shot2 || `Dream narrative develops: ${content.slice(150, 300)}`
+    const videoPart3 = storyboard.shot3 || `Dream conclusion: ${content.slice(300, 450)}`
 
     await supabase
       .from('media_generation_queue')
