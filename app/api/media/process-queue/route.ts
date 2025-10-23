@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import {
-  generateImage,
-  generateVideoFromImage,
-  generateStoryboardVideo,
+  createImageTask,
+  createStoryboardVideoTask,
+  createVeo3VideoTask,
+  pollImageTask,
+  pollStoryboardTask,
   checkImageTaskStatus,
   checkStoryboardTaskStatus,
   checkVeo3TaskStatus
@@ -117,23 +119,24 @@ async function processQueue() {
           imageTaskId = task.kie_image_task_id
           console.log('✅ Recovered image from existing task')
         } else {
-          console.log('⚠️ Existing image task not ready, generating new image...')
-          const imageResult = await generateImage(task.image_prompt, '1:1')
-          kieImageUrl = imageResult.imageUrl
-          imageTaskId = imageResult.taskId
+          console.log('⚠️ Existing image task not ready, will poll it now...')
+          imageTaskId = task.kie_image_task_id
+          kieImageUrl = await pollImageTask(imageTaskId)
         }
       } else {
-        // Generate new image
-        console.log('Generating image...')
-        const imageResult = await generateImage(task.image_prompt, '1:1')
-        kieImageUrl = imageResult.imageUrl
-        imageTaskId = imageResult.taskId
+        // Create new image task and save task ID immediately BEFORE polling
+        console.log('Creating image generation task...')
+        imageTaskId = await createImageTask(task.image_prompt, '1:1')
 
-        // Save task ID immediately for recovery
+        console.log(`✅ Image task created: ${imageTaskId}, saving to queue...`)
         await supabase
           .from('media_generation_queue')
           .update({ kie_image_task_id: imageTaskId })
           .eq('id', task.id)
+
+        // Now poll for completion
+        console.log('Polling for image completion...')
+        kieImageUrl = await pollImageTask(imageTaskId)
       }
 
       // Step 2: Upload image to Supabase Storage
@@ -175,55 +178,55 @@ async function processQueue() {
           videoTaskId = task.kie_video_task_id
           console.log('✅ Recovered video from existing task')
         } else {
-          console.log('⚠️ Existing video task not ready, generating new video...')
+          console.log('⚠️ Existing video task not ready, will poll it now...')
+          videoTaskId = task.kie_video_task_id
           if (usesStoryboard) {
-            console.log('✅ Using Sora 2 Pro Storyboard (3 parts, 15 seconds)')
-            const videoResult = await generateStoryboardVideo(
-              [task.video_prompt_part1, task.video_prompt_part2, task.video_prompt_part3],
-              kieImageUrl,
-              'landscape'
-            )
-            kieVideoUrl = videoResult.videoUrl
-            videoTaskId = videoResult.taskId
-          } else if (task.video_prompt) {
-            console.log('⚠️ Using Veo3 Fast (legacy single prompt)')
-            const videoResult = await generateVideoFromImage(task.video_prompt, kieImageUrl, '16:9')
-            kieVideoUrl = videoResult.videoUrl
-            videoTaskId = videoResult.taskId
+            kieVideoUrl = await pollStoryboardTask(videoTaskId)
           } else {
-            throw new Error('No video prompts found in task')
+            // For Veo3, we'll use checkVeo3TaskStatus in a loop since we don't have pollVeo3Task yet
+            throw new Error('Veo3 polling not yet implemented - will retry on next run')
           }
         }
       } else {
-        // Generate new video
+        // Create new video task and save task ID immediately BEFORE polling
         if (task.video_prompt_part1 && task.video_prompt_part2 && task.video_prompt_part3) {
           // Use Sora 2 Pro Storyboard for 3-part narrative (15 seconds)
-          console.log('✅ Using Sora 2 Pro Storyboard (3 parts, 15 seconds)')
+          console.log('✅ Creating Sora 2 Pro Storyboard task (3 parts, 15 seconds)')
           console.log('Shot 1:', task.video_prompt_part1)
           console.log('Shot 2:', task.video_prompt_part2)
           console.log('Shot 3:', task.video_prompt_part3)
-          const videoResult = await generateStoryboardVideo(
+
+          videoTaskId = await createStoryboardVideoTask(
             [task.video_prompt_part1, task.video_prompt_part2, task.video_prompt_part3],
             kieImageUrl,
             'landscape'
           )
-          kieVideoUrl = videoResult.videoUrl
-          videoTaskId = videoResult.taskId
+
+          console.log(`✅ Storyboard video task created: ${videoTaskId}, saving to queue...`)
+          await supabase
+            .from('media_generation_queue')
+            .update({ kie_video_task_id: videoTaskId })
+            .eq('id', task.id)
+
+          console.log('Polling for storyboard video completion...')
+          kieVideoUrl = await pollStoryboardTask(videoTaskId)
         } else if (task.video_prompt) {
           // Fallback to Veo3 for legacy single-prompt videos
-          console.log('⚠️ Using Veo3 Fast (legacy single prompt) - 3-part prompts not found')
-          const videoResult = await generateVideoFromImage(task.video_prompt, kieImageUrl, '16:9')
-          kieVideoUrl = videoResult.videoUrl
-          videoTaskId = videoResult.taskId
+          console.log('⚠️ Creating Veo3 Fast task (legacy single prompt)')
+
+          videoTaskId = await createVeo3VideoTask(task.video_prompt, kieImageUrl, '16:9')
+
+          console.log(`✅ Veo3 video task created: ${videoTaskId}, saving to queue...`)
+          await supabase
+            .from('media_generation_queue')
+            .update({ kie_video_task_id: videoTaskId })
+            .eq('id', task.id)
+
+          // For now, throw error to retry later since we don't have pollVeo3Task
+          throw new Error('Veo3 task created but polling not yet implemented - will retry on next run')
         } else {
           throw new Error('No video prompts found in task')
         }
-
-        // Save task ID immediately for recovery
-        await supabase
-          .from('media_generation_queue')
-          .update({ kie_video_task_id: videoTaskId })
-          .eq('id', task.id)
       }
 
       // Step 4: Upload video to Supabase Storage

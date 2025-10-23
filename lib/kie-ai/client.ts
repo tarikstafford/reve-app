@@ -16,6 +16,10 @@ export interface GenerateVideoResult {
   taskId: string
 }
 
+export interface TaskCreatedResult {
+  taskId: string
+}
+
 interface ImageGenerationResponse {
   code: number
   msg: string
@@ -55,6 +59,48 @@ interface TaskStatusResponse {
 }
 
 /**
+ * Create image generation task (returns task ID immediately, without polling)
+ * @param prompt - Description of the image to generate
+ * @param aspectRatio - Aspect ratio (default: '1:1')
+ * @returns Task ID for tracking
+ */
+export async function createImageTask(
+  prompt: string,
+  aspectRatio: '1:1' | '16:9' | '9:16' = '1:1'
+): Promise<string> {
+  const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/gpt4o-image/generate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${KIE_AI_API_KEY}`
+    },
+    body: JSON.stringify({
+      prompt,
+      aspect_ratio: aspectRatio,
+      quality: 'standard'
+    })
+  })
+
+  if (!generateResponse.ok) {
+    throw new Error(`Kie.ai image generation failed: ${generateResponse.statusText}`)
+  }
+
+  const generateData: ImageGenerationResponse = await generateResponse.json()
+
+  if (generateData.code !== 200) {
+    throw new Error(`Kie.ai image generation failed: ${generateData.msg}`)
+  }
+
+  const taskId = generateData.data?.taskId
+
+  if (!taskId) {
+    throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
+  }
+
+  return taskId
+}
+
+/**
  * Generate image using Kie.ai 4O Image API
  * @param prompt - Description of the image to generate
  * @param aspectRatio - Aspect ratio (default: '1:1')
@@ -65,37 +111,8 @@ export async function generateImage(
   aspectRatio: '1:1' | '16:9' | '9:16' = '1:1'
 ): Promise<GenerateImageResult> {
   try {
-    // Create generation task
-    const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/gpt4o-image/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${KIE_AI_API_KEY}`
-      },
-      body: JSON.stringify({
-        prompt,
-        aspect_ratio: aspectRatio,
-        quality: 'standard'
-      })
-    })
-
-    if (!generateResponse.ok) {
-      throw new Error(`Kie.ai image generation failed: ${generateResponse.statusText}`)
-    }
-
-    const generateData: ImageGenerationResponse = await generateResponse.json()
-
-    console.log('Kie.ai image generation response:', JSON.stringify(generateData, null, 2))
-
-    if (generateData.code !== 200) {
-      throw new Error(`Kie.ai image generation failed: ${generateData.msg}`)
-    }
-
-    const taskId = generateData.data?.taskId
-
-    if (!taskId) {
-      throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
-    }
+    // Create generation task and get task ID
+    const taskId = await createImageTask(prompt, aspectRatio)
 
     // Poll for completion (max 3 minutes)
     const maxAttempts = 90
@@ -155,6 +172,65 @@ export async function generateImage(
 }
 
 /**
+ * Poll for image task completion
+ * @param taskId - The Kie.ai task ID to poll
+ * @param maxAttempts - Maximum number of polling attempts (default: 90)
+ * @param pollInterval - Interval between polls in milliseconds (default: 2000)
+ * @returns Image URL once complete
+ */
+export async function pollImageTask(
+  taskId: string,
+  maxAttempts: number = 90,
+  pollInterval: number = 2000
+): Promise<string> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, pollInterval))
+
+    console.log(`Polling Kie.ai image task status (attempt ${attempt + 1}/${maxAttempts}): ${taskId}`)
+
+    const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/gpt4o-image/record-info?taskId=${taskId}`, {
+      headers: {
+        'Authorization': `Bearer ${KIE_AI_API_KEY}`
+      }
+    })
+
+    if (!statusResponse.ok) {
+      throw new Error(`Failed to check task status: ${statusResponse.statusText}`)
+    }
+
+    const statusData: TaskStatusResponse = await statusResponse.json()
+
+    const currentStatus = statusData.data.status || 'UNKNOWN'
+    const progress = statusData.data.progress || '0'
+    console.log(`Image task status: ${currentStatus} (${progress}) - Attempt ${attempt + 1}/${maxAttempts}`)
+
+    if (statusData.code !== 200) {
+      throw new Error(`Failed to check image task status: ${statusData.msg}`)
+    }
+
+    // Check if task is complete
+    if (statusData.data.successFlag === 1 || statusData.data.status === 'SUCCESS') {
+      const imageUrl = statusData.data.response?.resultUrls?.[0]
+
+      if (imageUrl) {
+        console.log(`Image generation complete: ${imageUrl}`)
+        return imageUrl
+      } else {
+        console.warn('Task marked as complete but no image URL found. Full response:', JSON.stringify(statusData, null, 2))
+        throw new Error('Image generation completed but no URL returned')
+      }
+    }
+
+    // Check for failure
+    if (statusData.data.status === 'FAILED' || statusData.data.errorCode) {
+      throw new Error(`Image generation failed: ${statusData.data.errorMessage || 'Unknown error'}`)
+    }
+  }
+
+  throw new Error('Image generation timed out after 3 minutes')
+}
+
+/**
  * Check status of existing image task (for recovery from polling failures)
  * @param taskId - The Kie.ai task ID to check
  * @returns Image URL if task completed, null if still pending/failed
@@ -200,6 +276,69 @@ export async function checkImageTaskStatus(taskId: string): Promise<string | nul
 }
 
 /**
+ * Create storyboard video task (returns task ID immediately, without polling)
+ * @param prompts - Array of 3 prompts for beginning, middle, and end
+ * @param imageUrl - URL of the source image
+ * @param aspectRatio - Video aspect ratio ('portrait' or 'landscape')
+ * @returns Task ID for tracking
+ */
+export async function createStoryboardVideoTask(
+  prompts: [string, string, string],
+  imageUrl: string,
+  aspectRatio: 'portrait' | 'landscape' = 'landscape'
+): Promise<string> {
+  const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/jobs/createTask`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${KIE_AI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'sora-2-pro-storyboard',
+      input: {
+        n_frames: '15',
+        image_urls: [imageUrl],
+        aspect_ratio: aspectRatio,
+        shots: [
+          {
+            Scene: prompts[0],
+            duration: 5
+          },
+          {
+            Scene: prompts[1],
+            duration: 5
+          },
+          {
+            Scene: prompts[2],
+            duration: 5
+          }
+        ]
+      }
+    })
+  })
+
+  if (!generateResponse.ok) {
+    throw new Error(`Kie.ai storyboard generation failed: ${generateResponse.statusText}`)
+  }
+
+  const generateData: VideoGenerationResponse = await generateResponse.json()
+
+  console.log('Kie.ai storyboard generation response:', JSON.stringify(generateData, null, 2))
+
+  if (generateData.code !== 200) {
+    throw new Error(`Kie.ai storyboard generation failed: ${generateData.msg}`)
+  }
+
+  const taskId = generateData.data?.taskId
+
+  if (!taskId) {
+    throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
+  }
+
+  return taskId
+}
+
+/**
  * Generate storyboard video using Kie.ai Sora 2 Pro Storyboard API
  * Creates a 15-second video from 3 prompts (5 seconds each)
  * @param prompts - Array of 3 prompts for beginning, middle, and end
@@ -213,54 +352,8 @@ export async function generateStoryboardVideo(
   aspectRatio: 'portrait' | 'landscape' = 'landscape'
 ): Promise<GenerateVideoResult> {
   try {
-    // Create storyboard video generation task with Sora 2 Pro
-    const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/jobs/createTask`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${KIE_AI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'sora-2-pro-storyboard',
-        input: {
-          n_frames: '15',
-          image_urls: [imageUrl],
-          aspect_ratio: aspectRatio,
-          shots: [
-            {
-              Scene: prompts[0],
-              duration: 5
-            },
-            {
-              Scene: prompts[1],
-              duration: 5
-            },
-            {
-              Scene: prompts[2],
-              duration: 5
-            }
-          ]
-        }
-      })
-    })
-
-    if (!generateResponse.ok) {
-      throw new Error(`Kie.ai storyboard generation failed: ${generateResponse.statusText}`)
-    }
-
-    const generateData: VideoGenerationResponse = await generateResponse.json()
-
-    console.log('Kie.ai storyboard generation response:', JSON.stringify(generateData, null, 2))
-
-    if (generateData.code !== 200) {
-      throw new Error(`Kie.ai storyboard generation failed: ${generateData.msg}`)
-    }
-
-    const taskId = generateData.data?.taskId
-
-    if (!taskId) {
-      throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
-    }
+    // Create storyboard video generation task and get task ID
+    const taskId = await createStoryboardVideoTask(prompts, imageUrl, aspectRatio)
 
     // Poll for completion (max 10 minutes for longer video generation)
     const maxAttempts = 120
@@ -319,6 +412,65 @@ export async function generateStoryboardVideo(
 }
 
 /**
+ * Poll for storyboard video task completion
+ * @param taskId - The Kie.ai task ID to poll
+ * @param maxAttempts - Maximum number of polling attempts (default: 120)
+ * @param pollInterval - Interval between polls in milliseconds (default: 5000)
+ * @returns Video URL once complete
+ */
+export async function pollStoryboardTask(
+  taskId: string,
+  maxAttempts: number = 120,
+  pollInterval: number = 5000
+): Promise<string> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, pollInterval))
+
+    console.log(`Polling Kie.ai storyboard task status (attempt ${attempt + 1}/${maxAttempts}): ${taskId}`)
+
+    const statusResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/jobs/task-info?taskId=${taskId}`, {
+      headers: {
+        'Authorization': `Bearer ${KIE_AI_API_KEY}`
+      }
+    })
+
+    if (!statusResponse.ok) {
+      throw new Error(`Failed to check task status: ${statusResponse.statusText}`)
+    }
+
+    const statusData: TaskStatusResponse = await statusResponse.json()
+
+    const currentStatus = statusData.data.status || 'UNKNOWN'
+    const progress = statusData.data.progress || '0'
+    console.log(`Storyboard task status: ${currentStatus} (${progress}) - Attempt ${attempt + 1}/${maxAttempts}`)
+
+    if (statusData.code !== 200) {
+      throw new Error(`Failed to check storyboard task status: ${statusData.msg}`)
+    }
+
+    // Check if task is complete
+    if (statusData.data.successFlag === 1 || statusData.data.status === 'SUCCESS') {
+      const videoUrl = statusData.data.response?.resultUrls?.[0]
+
+      if (videoUrl) {
+        console.log(`Storyboard video generation complete: ${videoUrl}`)
+        return videoUrl
+      } else {
+        console.warn('Task marked as complete but no video URL found. Full response:', JSON.stringify(statusData, null, 2))
+        throw new Error('Storyboard video generation completed but no URL returned')
+      }
+    }
+
+    // Check for failure
+    if (statusData.data.status === 'FAILED' || statusData.data.errorCode) {
+      throw new Error(`Storyboard video generation failed: ${statusData.data.errorMessage || 'Unknown error'}`)
+    }
+  }
+
+  throw new Error('Storyboard video generation timed out after 10 minutes')
+}
+
+/**
  * Check status of existing storyboard video task (for recovery from polling failures)
  * @param taskId - The Kie.ai task ID to check
  * @returns Video URL if task completed, null if still pending/failed
@@ -364,6 +516,55 @@ export async function checkStoryboardTaskStatus(taskId: string): Promise<string 
 }
 
 /**
+ * Create Veo3 video task (returns task ID immediately, without polling)
+ * @param prompt - Description of the video motion/animation
+ * @param imageUrl - URL of the source image
+ * @param aspectRatio - Video aspect ratio ('16:9' or '9:16')
+ * @returns Task ID for tracking
+ */
+export async function createVeo3VideoTask(
+  prompt: string,
+  imageUrl: string,
+  aspectRatio: '16:9' | '9:16' = '16:9'
+): Promise<string> {
+  const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/veo/generate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${KIE_AI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'veo3_fast',
+      prompt,
+      imageUrls: [imageUrl],
+      aspectRatio: aspectRatio,
+      enableFallback: true,
+      enableTranslation: true
+    })
+  })
+
+  if (!generateResponse.ok) {
+    throw new Error(`Kie.ai video generation failed: ${generateResponse.statusText}`)
+  }
+
+  const generateData: VideoGenerationResponse = await generateResponse.json()
+
+  console.log('Kie.ai video generation response:', JSON.stringify(generateData, null, 2))
+
+  if (generateData.code !== 200) {
+    throw new Error(`Kie.ai video generation failed: ${generateData.msg}`)
+  }
+
+  const taskId = generateData.data?.taskId
+
+  if (!taskId) {
+    throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
+  }
+
+  return taskId
+}
+
+/**
  * Generate video from image using Kie.ai Veo3 Fast API
  * @param prompt - Description of the video motion/animation
  * @param imageUrl - URL of the source image
@@ -376,40 +577,8 @@ export async function generateVideoFromImage(
   aspectRatio: '16:9' | '9:16' = '16:9'
 ): Promise<GenerateVideoResult> {
   try {
-    // Create video generation task with Veo3
-    const generateResponse = await fetch(`${KIE_AI_BASE_URL}/api/v1/veo/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${KIE_AI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'veo3_fast',
-        prompt,
-        imageUrls: [imageUrl],
-        aspectRatio: aspectRatio,
-        enableFallback: true,
-        enableTranslation: true
-      })
-    })
-
-    if (!generateResponse.ok) {
-      throw new Error(`Kie.ai video generation failed: ${generateResponse.statusText}`)
-    }
-
-    const generateData: VideoGenerationResponse = await generateResponse.json()
-
-    console.log('Kie.ai video generation response:', JSON.stringify(generateData, null, 2))
-
-    if (generateData.code !== 200) {
-      throw new Error(`Kie.ai video generation failed: ${generateData.msg}`)
-    }
-
-    const taskId = generateData.data?.taskId
-
-    if (!taskId) {
-      throw new Error(`No taskId returned from Kie.ai. Response: ${JSON.stringify(generateData)}`)
-    }
+    // Create video generation task and get task ID
+    const taskId = await createVeo3VideoTask(prompt, imageUrl, aspectRatio)
 
     // Poll for completion (max 5 minutes for video generation)
     const maxAttempts = 60
