@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { OnboardingData } from '../onboarding-flow'
+import { getAdaptiveLanguage } from '@/lib/onboarding/language-adapter'
 
 interface QualityDesiredStepProps {
   onNext: () => void
@@ -40,7 +41,10 @@ export function QualityDesiredStep({ onNext, onBack, data, updateData }: Quality
           What is one quality you wish you had?
         </h2>
         <p className="text-purple-600 text-lg leading-relaxed max-w-2xl mx-auto">
-          This is the bridge to your future self. By naming what you desire, you begin to cultivate it. The universe responds to clear intention.
+          {data.age
+            ? getAdaptiveLanguage('quality-desired-description', data.age)
+            : "Your aspirations define the shape of your becoming. Naming the qualities you seek begins to collapse the possibility into reality."
+          }
         </p>
       </motion.div>
 

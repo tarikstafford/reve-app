@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { OnboardingData } from '../onboarding-flow'
 import { signInWithGoogle } from '@/lib/auth/auth-helpers'
+import { getAdaptiveLanguage } from '@/lib/onboarding/language-adapter'
 
 interface IdealSelfStepProps {
   data: Partial<OnboardingData>
@@ -57,7 +58,10 @@ export function IdealSelfStep({ data }: IdealSelfStepProps) {
           transition={{ delay: 0.3 }}
           className="text-gray-600 text-lg"
         >
-          Meet the person you&apos;re becoming, {data.name}
+          {data.age
+            ? getAdaptiveLanguage('ideal-self-greeting', data.age)
+            : "Meet your ideal self"
+          }, {data.name}
         </motion.p>
       </div>
 

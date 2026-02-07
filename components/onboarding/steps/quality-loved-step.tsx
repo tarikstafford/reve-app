@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { OnboardingData } from '../onboarding-flow'
+import { getAdaptiveLanguage } from '@/lib/onboarding/language-adapter'
 
 interface QualityLovedStepProps {
   onNext: () => void
@@ -40,7 +41,10 @@ export function QualityLovedStep({ onNext, onBack, data, updateData }: QualityLo
           What is one quality you love about yourself?
         </h2>
         <p className="text-purple-600 text-lg leading-relaxed max-w-2xl mx-auto">
-          Your present strengths are the foundation of your transformation. Recognizing what you cherish about yourself anchors the reality you&apos;re shifting toward.
+          {data.age
+            ? getAdaptiveLanguage('quality-loved-description', data.age)
+            : "Your present strengths are the foundation of your transformation. Recognizing what you cherish about yourself anchors the reality you're shifting toward."
+          }
         </p>
       </motion.div>
 

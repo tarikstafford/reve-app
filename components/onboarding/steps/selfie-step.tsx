@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Camera, Upload, X } from 'lucide-react'
 import { OnboardingData } from '../onboarding-flow'
+import { getAdaptiveLanguage } from '@/lib/onboarding/language-adapter'
 
 interface SelfieStepProps {
   onNext: () => void
@@ -101,7 +102,10 @@ export function SelfieStep({ onNext, onBack, data, updateData }: SelfieStepProps
           Take a selfie
         </h2>
         <p className="text-gray-500 text-lg">
-          This helps us create a visual representation of your ideal self
+          {data.age
+            ? getAdaptiveLanguage('selfie-description', data.age)
+            : "This helps us create a visual representation of your ideal self"
+          }
         </p>
       </div>
 

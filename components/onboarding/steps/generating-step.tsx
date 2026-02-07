@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Loader2, Sparkles } from 'lucide-react'
 import { OnboardingData } from '../onboarding-flow'
+import { getAdaptiveLanguage } from '@/lib/onboarding/language-adapter'
 
 interface GeneratingStepProps {
   onNext: () => void
@@ -80,7 +81,10 @@ export function GeneratingStep({ onNext, data, updateData }: GeneratingStepProps
           Creating your ideal self...
         </h2>
         <p className="text-gray-500 text-lg">
-          We&apos;re weaving together your aspirations
+          {data.age
+            ? getAdaptiveLanguage('generating-description', data.age)
+            : "We're manifesting a visual representation of your ideal self. This quantum leap typically takes about 30 seconds."
+          }
         </p>
       </div>
 

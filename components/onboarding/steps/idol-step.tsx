@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { OnboardingData } from '../onboarding-flow'
+import { getAdaptiveLanguage } from '@/lib/onboarding/language-adapter'
 
 interface IdolStepProps {
   onNext: () => void
@@ -40,7 +41,10 @@ export function IdolStep({ onNext, onBack, data, updateData }: IdolStepProps) {
           Who is one person you idolize?
         </h2>
         <p className="text-purple-600 text-lg leading-relaxed max-w-2xl mx-auto">
-          The people we admire reflect qualities we&apos;re ready to embody. Their essence becomes part of the vision you&apos;re manifesting.
+          {data.age
+            ? getAdaptiveLanguage('idol-description', data.age)
+            : "Consider someone—real or fictional—who embodies the qualities you aspire to. Their existence proves the reality you seek is attainable."
+          }
         </p>
       </motion.div>
 

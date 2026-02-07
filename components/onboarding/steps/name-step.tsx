@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { OnboardingData } from '../onboarding-flow'
+import { getAdaptiveLanguage } from '@/lib/onboarding/language-adapter'
 
 interface NameStepProps {
   onNext: () => void
@@ -39,7 +40,10 @@ export function NameStep({ onNext, data, updateData }: NameStepProps) {
           What is your name?
         </h2>
         <p className="text-purple-600 text-lg leading-relaxed">
-          Every journey begins with an introduction. We&apos;re here to help you understand the universe you&apos;re creating.
+          {data.age
+            ? getAdaptiveLanguage('name-description', data.age)
+            : "We're here to help you understand the universe you're creating"
+          }
         </p>
       </motion.div>
 
